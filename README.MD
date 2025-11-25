@@ -2,7 +2,7 @@
 
 A professional-grade GeoAnalytics dashboard built with React and OpenStreetMap. This application provides real-time spatial analysis, allowing users to query urban amenities, visualize density heatmaps, analyze categorical data, and calculate optimal routes using OSRM.
 
-![GeoAnalytica Dashboard](https://via.placeholder.com/800x400?text=Dashboard+Screenshot) 
+![GeoAnalytica Dashboard](https://thegeodashboard.vercel.app/) 
 
 
 ## 🚀 Key Features
