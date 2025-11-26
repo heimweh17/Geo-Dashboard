@@ -246,7 +246,7 @@ function App() {
                 ♿ Wheelchair: {selectedPlace.tags.wheelchair}
               </p>
             )}
-            // ... (continuing App.jsx)
+            
 
             {(selectedPlace.tags?.brand || selectedPlace.tags?.operator) && (
               <p className="text-xs text-blue-800 dark:text-blue-200 mb-1">
