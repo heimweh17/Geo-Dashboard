@@ -57,18 +57,38 @@ function App() {
     }
   };
 
-  const filteredData = categoryFilter
-    ? data.filter((item) => {
-        const cuisine = item.tags.cuisine || '';
-        const religion = item.tags.religion || '';
-        const type = item.tags['school:type'] || '';
-        return (
-          cuisine.toLowerCase().includes(categoryFilter.toLowerCase()) ||
-          religion.toLowerCase().includes(categoryFilter.toLowerCase()) ||
-          type.toLowerCase().includes(categoryFilter.toLowerCase())
-        );
-      })
-    : data;
+  // In App.jsx, update the filteredData logic:
+
+const filteredData = categoryFilter
+  ? data.filter((item) => {
+      const tags = item.tags || {};
+      
+      // Check amenity type (primary category)
+      if (tags.amenity && tags.amenity.toLowerCase().includes(categoryFilter.toLowerCase())) {
+        return true;
+      }
+      
+      // Check cuisine (subcategory)
+      const cuisine = tags.cuisine || '';
+      if (cuisine.toLowerCase().includes(categoryFilter.toLowerCase())) {
+        return true;
+      }
+      
+      // Check religion (subcategory)
+      const religion = tags.religion || '';
+      if (religion.toLowerCase().includes(categoryFilter.toLowerCase())) {
+        return true;
+      }
+      
+      // Check school type (subcategory)
+      const schoolType = tags['school:type'] || '';
+      if (schoolType.toLowerCase().includes(categoryFilter.toLowerCase())) {
+        return true;
+      }
+      
+      return false;
+    })
+  : data;
 
   const handleCitySearch = async (cityName) => {
     setLoading(true);
@@ -139,7 +159,7 @@ function App() {
   const clearFilter = () => {
     setCategoryFilter(null);
   };
-
+  
   const clearSelectedPlace = () => {
     setSelectedPlace(null);
   };
