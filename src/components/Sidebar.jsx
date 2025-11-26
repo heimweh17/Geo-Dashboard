@@ -14,7 +14,7 @@ const Sidebar = ({
   onRadiusChange,
   onExport,
   loading, 
-  selectedAmenity,
+    selectedAmenities,
   searchRadius,
   toggleTheme,
   isDarkMode,
@@ -56,18 +56,47 @@ const Sidebar = ({
           </form>
 
           <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Amenity Type</label>
-              <select 
-                value={selectedAmenity} 
-                onChange={(e) => onAmenityChange(e.target.value)}
-                className="w-full p-2 border rounded bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-              >
-                {AMENITIES.map(a => (
-                  <option key={a} value={a}>{a.replace(/_/g, ' ').toUpperCase()}</option>
-                ))}
-              </select>
-            </div>
+                <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Amenity Layers
+                </label>
+                <p className="text-[11px] text-gray-400 mb-2">
+                    Select one or more amenity types to display.
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                    {AMENITIES.map((a) => {
+                    const isActive = selectedAmenities.includes(a);
+                    return (
+                        <button
+                        key={a}
+                        type="button"
+                        onClick={() => {
+                            let next;
+                            if (isActive) {
+                            // 取消选择
+                            next = selectedAmenities.filter((x) => x !== a);
+                            // 至少保留一个，避免全空
+                            if (next.length === 0) next = [a];
+                            } else {
+                            next = [...selectedAmenities, a];
+                            }
+                            onAmenityChange(next);
+                        }}
+                        className={`
+                            text-[11px] px-2 py-1.5 rounded-full border transition
+                            ${isActive 
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-sm' 
+                            : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'
+                            }
+                        `}
+                        >
+                        {a.replace(/_/g, ' ').toUpperCase()}
+                        </button>
+                    );
+                    })}
+                    </div>
+                </div>
+
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
