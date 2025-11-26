@@ -21,18 +21,21 @@ export const searchCity = async (cityName) => {
 // Fetches data. 
 // If `polygonCoords` is provided, it uses a polygon query.
 // If not, it uses a standard radius query.
-export const fetchAmenities = async (lat, lon, amenity, radius, polygonCoords = null) => {
+export const fetchAmenities = async (lat, lon, amenities, radius, polygonCoords = null) => {
+  // 支持 string 或 array
+  const list = Array.isArray(amenities) ? amenities : [amenities];
+  const amenityFilter = list.join('|'); // restaurant|cafe|bar...
+
   let query = '';
 
   if (polygonCoords) {
-    // Convert Leaflet lat objects {lat: x, lng: y} to Overpass string "lat lon lat lon..."
-    const polyString = polygonCoords.map(p => `${p.lat} ${p.lng}`).join(' ');
+    const polyString = polygonCoords.map((p) => `${p.lat} ${p.lng}`).join(' ');
     query = `
       [out:json][timeout:25];
       (
-        node["amenity"="${amenity}"](poly:"${polyString}");
-        way["amenity"="${amenity}"](poly:"${polyString}");
-        relation["amenity"="${amenity}"](poly:"${polyString}");
+        node["amenity"~"${amenityFilter}"](poly:"${polyString}");
+        way["amenity"~"${amenityFilter}"](poly:"${polyString}");
+        relation["amenity"~"${amenityFilter}"](poly:"${polyString}");
       );
       out center;
     `;
@@ -40,21 +43,25 @@ export const fetchAmenities = async (lat, lon, amenity, radius, polygonCoords = 
     query = `
       [out:json][timeout:25];
       (
-        node["amenity"="${amenity}"](around:${radius},${lat},${lon});
-        way["amenity"="${amenity}"](around:${radius},${lat},${lon});
-        relation["amenity"="${amenity}"](around:${radius},${lat},${lon});
+        node["amenity"~"${amenityFilter}"](around:${radius},${lat},${lon});
+        way["amenity"~"${amenityFilter}"](around:${radius},${lat},${lon});
+        relation["amenity"~"${amenityFilter}"](around:${radius},${lat},${lon});
       );
       out center;
     `;
   }
 
   try {
-    const response = await axios.post(OVERPASS_API_URL, `data=${encodeURIComponent(query)}`, {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-    });
+    const response = await axios.post(
+      OVERPASS_API_URL,
+      `data=${encodeURIComponent(query)}`,
+      {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      }
+    );
     return response.data.elements;
   } catch (error) {
-    console.error("Error fetching amenities:", error);
+    console.error('Error fetching amenities:', error);
     throw error;
   }
 };
