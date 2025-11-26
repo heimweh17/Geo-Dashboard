@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
-const AnalyticsPanel = ({ data, amenity, onCategoryClick, activeFilter, onClearFilter }) => {
+const AnalyticsPanel = ({ data, amenityLabel, onCategoryClick, activeFilter, onClearFilter }) => {
   const stats = useMemo(() => {
     if (!data || data.length === 0) return { total: 0, topNames: [], breakdown: [] };
 
@@ -50,7 +50,10 @@ const AnalyticsPanel = ({ data, amenity, onCategoryClick, activeFilter, onClearF
         ) : (
             <>
                 <div className="text-6xl mb-4">🤷‍♂️</div>
-                <h3 className="text-xl font-bold text-gray-700 dark:text-gray-300">No {amenity}s found</h3>
+                <h3 className="text-xl font-bold text-gray-700 dark:text-gray-300">
+            No {amenityLabel} found
+        </h3>
+
                 <p className="text-sm text-gray-500 mt-2">Try a larger radius or a different area.</p>
             </>
         )}
