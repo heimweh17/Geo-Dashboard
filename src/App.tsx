@@ -272,6 +272,8 @@ function App() {
           onCategoryClick={handleCategorySelect}
           activeFilter={categoryFilter}
           onClearFilter={clearFilter}
+          searchRadius={radius}           // ADD THIS
+          customPolygon={customPolygon}   // ADD THIS
         />
       </div>
     </div>

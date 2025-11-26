@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react'; // Fixed: useEffec -> useEffect
 import { 
   X, TrendingUp, MapPin, Layers, Activity, Download, 
   Database, BarChart3, Terminal
@@ -18,12 +18,11 @@ import {
 import { 
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell
 } from 'recharts';
-
-// 导入Leaflet和React-Leaflet
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
+import { generateComparativeInsights, calculateSimilarityScore } from '../utlis/generateInsights';
 
-// 修复Leaflet图标问题
+// Leaflet icon fix
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -31,7 +30,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// 单独的amenity选项
 const AMENITY_OPTIONS = [
   'restaurant', 'cafe', 'bar', 'fast_food', 'pub', 'cinema', 
   'hospital', 'clinic', 'pharmacy', 'dentist', 'school', 
@@ -48,6 +46,17 @@ const ComparisonModal = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [comparisonData, setComparisonData] = useState(null);
   const [error, setError] = useState(null);
+
+
+  const insights = useMemo(() => {
+    if (!comparisonData) return [];
+    return generateComparativeInsights(comparisonData);
+  }, [comparisonData]);
+
+  const similarityScore = useMemo(() => {
+    if (!comparisonData) return 0;
+    return calculateSimilarityScore(comparisonData.city1, comparisonData.city2);
+  }, [comparisonData]);
 
   const toggleAmenity = (amenity) => {
     setSelectedAmenities(prev => {
@@ -106,7 +115,6 @@ const ComparisonModal = ({ isOpen, onClose }) => {
           dataPoints: data1.length + data2.length
         }
       });
-
     } catch (err) {
       console.error('Analysis error:', err);
       setError('Analysis failed. Please try again.');
@@ -285,12 +293,81 @@ const ComparisonModal = ({ isOpen, onClose }) => {
                   <div className="text-lg font-bold text-blue-900 dark:text-blue-400">{comparisonData.metadata.analysisDate}</div>
                 </div>
               </div>
+            </div>
 
-              {/* 地图区域 - 现在应该工作了 */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <CityMapCard data={comparisonData.city1} label="City A" radius={radius} />
-                <CityMapCard data={comparisonData.city2} label="City B" radius={radius} />
+            {/* KEY INSIGHTS - Updated colors */}
+              <div className="bg-blue-50 dark:bg-blue-950 border-2 border-blue-300 dark:border-blue-700 p-6 rounded-lg shadow-lg">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                    🔍 Key Insights
+                  </h2>
+                  <div className="text-right">
+                    <div className="text-sm text-blue-600 dark:text-blue-400 font-bold">Similarity Score</div>
+                    <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                      {similarityScore.toFixed(0)}%
+                    </div>
+                    <div className="text-xs text-blue-500 dark:text-blue-400">
+                      {similarityScore > 70 ? "Very Similar" : similarityScore > 40 ? "Moderately Different" : "Very Different"}
+                    </div>
+                  </div>
+                </div>
+
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {insights.map((insight, idx) => (
+                  <div
+                    key={idx}
+                    className={`p-4 rounded-lg border-l-4 ${
+                      insight.importance === 'high'
+                        ? 'bg-white dark:bg-blue-900 border-orange-500'
+                        : 'bg-white dark:bg-blue-900 border-blue-400'
+                    } shadow-sm hover:shadow-md transition-shadow`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="text-2xl flex-shrink-0">{insight.icon}</div>
+                      <p
+                        className="text-sm text-gray-800 dark:text-gray-200"
+                        dangerouslySetInnerHTML={{ __html: insight.text }}
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
+
+              {/* Visual Comparison Bar */}
+              <div className="mt-6 p-4 bg-white dark:bg-blue-900 rounded-lg">
+                <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
+                  Overall Urban Character Comparison
+                </h3>
+                <div className="relative h-8 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div
+                    className="absolute left-0 top-0 h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-1000 flex items-center justify-end pr-3"
+                    style={{ width: `${(comparisonData.city1.total / (comparisonData.city1.total + comparisonData.city2.total)) * 100}%` }}
+                  >
+                    <span className="text-xs font-bold text-white">
+                      {comparisonData.city1.name.split(',')[0]}
+                    </span>
+                  </div>
+                  <div
+                    className="absolute right-0 top-0 h-full bg-gradient-to-l from-indigo-500 to-indigo-600 transition-all duration-1000 flex items-center justify-start pl-3"
+                    style={{ width: `${(comparisonData.city2.total / (comparisonData.city1.total + comparisonData.city2.total)) * 100}%` }}
+                  >
+                    <span className="text-xs font-bold text-white">
+                      {comparisonData.city2.name.split(',')[0]}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex justify-between mt-2 text-xs text-gray-600 dark:text-gray-400">
+                  <span>{comparisonData.city1.total} amenities</span>
+                  <span>{comparisonData.city2.total} amenities</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Maps */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <CityMapCard data={comparisonData.city1} label="City A" radius={radius} />
+              <CityMapCard data={comparisonData.city2} label="City B" radius={radius} />
             </div>
 
             {/* Charts */}
@@ -385,16 +462,14 @@ const ComparisonModal = ({ isOpen, onClose }) => {
                 />
               </div>
             </div>
-
           </div>
         )}
-
       </div>
     </div>
   );
 };
 
-// 简化的地图组件
+// Helper components OUTSIDE the main component
 const CityMapCard = ({ data, label, radius }) => {
   const pattern = interpretSpatialPattern(data.spatialPattern);
   
@@ -414,7 +489,6 @@ const CityMapCard = ({ data, label, radius }) => {
         </div>
       </div>
       
-      {/* 简化的地图容器 - 确保可以工作 */}
       <div className="mb-4 h-64 border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden relative">
         <SimpleMap 
           center={data.coordinates} 
@@ -424,8 +498,6 @@ const CityMapCard = ({ data, label, radius }) => {
         />
       </div>
       
-
-      {/* 统计数据 */}
       <div className="grid grid-cols-2 gap-4 text-sm">
         <div>
           <div className="text-gray-600 dark:text-gray-400 font-bold">Density</div>
@@ -448,7 +520,6 @@ const CityMapCard = ({ data, label, radius }) => {
   );
 };
 
-// 简化但可工作的地图组件
 const SimpleMap = ({ center, data, radius, cityName }) => {
   return (
     <MapContainer
@@ -463,7 +534,6 @@ const SimpleMap = ({ center, data, radius, cityName }) => {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       
-      {/* 搜索范围圆圈 */}
       <Circle
         center={center}
         radius={radius}
@@ -476,7 +546,6 @@ const SimpleMap = ({ center, data, radius, cityName }) => {
         }}
       />
       
-      {/* 城市中心标记 */}
       <Marker position={center}>
         <Popup>
           <div style={{ fontSize: '12px' }}>
@@ -488,7 +557,6 @@ const SimpleMap = ({ center, data, radius, cityName }) => {
         </Popup>
       </Marker>
       
-      {/* 数据点标记 */}
       {data && data.slice(0, 50).map((item, index) => {
         const lat = item.lat || item.center?.lat;
         const lon = item.lon || item.center?.lon;
@@ -551,7 +619,6 @@ const SpatialPatternDisplay = ({ city1, city2 }) => {
             </div>
           </div>
         </div>
-
         <div className="border border-blue-200 dark:border-blue-700 p-4 rounded-md">
           <div className="font-bold text-gray-900 dark:text-white mb-2">{city2.name.split(',')[0]}</div>
           <div className="text-sm space-y-1">

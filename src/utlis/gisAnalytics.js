@@ -232,3 +232,4 @@ export const interpretSpatialPattern = (nni) => {
   if (nni > 1.2) return { pattern: 'Dispersed', color: 'text-green-600', icon: '🟢' };
   return { pattern: 'Random', color: 'text-blue-600', icon: '🔵' };
 };
+
