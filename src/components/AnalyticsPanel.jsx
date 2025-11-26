@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from 'recharts';
-import { ArrowLeft, TrendingUp, Layers, Activity, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Database, ChevronDown, ChevronUp } from 'lucide-react';
 import { 
   calculateCircleArea, 
   calculateDensity, 
@@ -10,7 +10,19 @@ import {
   interpretSpatialPattern
 } from '../utlis/gisAnalytics';
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#ff7c7c'];
+// COLORFUL palette for Primary Categories (easy to distinguish)
+const PRIMARY_COLORS = [
+  '#0088FE', // bright blue
+  '#00C49F', // teal
+  '#FFBB28', // yellow
+  '#FF8042', // orange
+  '#8884d8', // purple
+  '#82ca9d', // green
+  '#ffc658', // gold
+  '#ff7c7c', // red
+  '#a4de6c', // lime
+  '#d084d0', // pink
+];
 
 const AnalyticsPanel = ({ 
   data, 
@@ -28,28 +40,24 @@ const AnalyticsPanel = ({
   const metrics = useMemo(() => {
     if (!data || data.length === 0) return null;
     
-    // Calculate area
     const area = customPolygon 
       ? calculatePolygonArea(customPolygon) 
       : calculateCircleArea(searchRadius);
     
-    // Basic stats
     const total = data.length;
     const breakdown = analyzeAmenityBreakdown(data);
     
-    // Advanced metrics
     const density = calculateDensity(total, area);
     const diversityIndex = calculateDiversityIndex(breakdown.byAmenity);
     const spatialPattern = calculateNearestNeighborIndex(data, area);
     const pattern = interpretSpatialPattern(spatialPattern);
     
-    // Walkability score
     const walkabilityScore = Math.min(
       (density / 50) * 50 + (diversityIndex / 2.5) * 50,
       100
     );
     
-    // PRIMARY CATEGORIES (Broad amenity types)
+    // PRIMARY CATEGORIES
     const topAmenities = Object.entries(breakdown.byAmenity)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 8)
@@ -59,44 +67,39 @@ const AnalyticsPanel = ({
         key: name 
       }));
     
-    // SUBCATEGORIES (Cuisine, Religion, School Type, etc.)
+    // SUBCATEGORIES
     const subcategories = [];
     
-    // Add cuisines
     Object.entries(breakdown.byCuisine).forEach(([cuisine, count]) => {
       subcategories.push({
         name: cuisine,
         value: count,
-        type: 'cuisine',
+        type: 'Cuisine',
         icon: '🍽️'
       });
     });
     
-    // Add religions
     Object.entries(breakdown.byReligion).forEach(([religion, count]) => {
       subcategories.push({
         name: religion,
         value: count,
-        type: 'religion',
+        type: 'Religion',
         icon: '⛪'
       });
     });
     
-    // Add school types
     Object.entries(breakdown.bySchoolType).forEach(([schoolType, count]) => {
       subcategories.push({
         name: schoolType,
         value: count,
-        type: 'school',
-        icon: '🏫'
+        type: 'Education',
+        icon: '🎓'
       });
     });
     
-    // Sort subcategories by count
     subcategories.sort((a, b) => b.value - a.value);
-    const topSubcategories = subcategories.slice(0, 8);
+    const topSubcategories = subcategories.slice(0, 10);
     
-    // Top locations by name
     const topNames = {};
     data.forEach(item => {
       const name = item.tags?.name || "Unknown";
@@ -108,11 +111,8 @@ const AnalyticsPanel = ({
       .slice(0, 5)
       .map(([name, count]) => ({ name: name.substring(0, 15), count }));
     
-    // Chain vs Independent
     const chainPct = (breakdown.chainsVsIndependent.chains / total) * 100;
     const independentPct = (breakdown.chainsVsIndependent.independent / total) * 100;
-    
-    // Accessibility
     const accessibilityPct = (breakdown.accessibilityCount / total) * 100;
     
     return {
@@ -122,7 +122,6 @@ const AnalyticsPanel = ({
       diversityIndex: diversityIndex.toFixed(3),
       spatialPattern: spatialPattern.toFixed(3),
       pattern: pattern.pattern,
-      patternColor: pattern.color,
       patternIcon: pattern.icon,
       walkabilityScore: walkabilityScore.toFixed(0),
       topAmenities,
@@ -138,25 +137,25 @@ const AnalyticsPanel = ({
 
   if (!metrics) {
     return (
-      <div className="w-full md:w-80 p-6 bg-white dark:bg-blue-950 border-l border-blue-200 dark:border-blue-800 shadow-xl flex flex-col items-center justify-center text-center h-full">
+      <div className="w-full md:w-80 p-6 bg-white dark:bg-gray-900 border-l border-gray-300 dark:border-gray-700 flex flex-col items-center justify-center text-center h-full">
         {activeFilter ? (
           <>
-            <p className="text-blue-600 dark:text-blue-400 mb-4">No results for "{activeFilter}"</p>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">No results for "{activeFilter}"</p>
             <button 
               onClick={onClearFilter} 
-              className="flex items-center gap-2 px-4 py-2 bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 border border-blue-400 dark:border-blue-600 hover:bg-blue-300 dark:hover:bg-blue-700 transition rounded-md"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 transition rounded"
             >
               <ArrowLeft size={16} /> Go Back
             </button>
           </>
         ) : (
           <>
-            <div className="text-6xl mb-4">🤷‍♂️</div>
-            <h3 className="text-xl font-bold text-blue-800 dark:text-blue-200">
-              No {amenityLabel} found
+            <div className="text-6xl mb-4 text-gray-400">📊</div>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200">
+              No data found
             </h3>
-            <p className="text-sm text-blue-600 dark:text-blue-400 mt-2">
-              Try a larger radius or a different area.
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+              Try a larger radius or different area.
             </p>
           </>
         )}
@@ -165,310 +164,312 @@ const AnalyticsPanel = ({
   }
 
   return (
-    <div className="w-full md:w-80 h-full flex flex-col bg-white dark:bg-blue-950 border-l border-blue-200 dark:border-blue-800 shadow-xl overflow-y-auto">
-      <div className="p-6 pb-12">
+    <div className="w-full md:w-80 h-full flex flex-col bg-white dark:bg-gray-900 border-l border-gray-300 dark:border-gray-700 overflow-y-auto">
+      <div className="p-6 space-y-6">
         
+        {/* Header */}
         {activeFilter ? (
-          <div className="mb-6">
+          <div>
             <button 
               onClick={onClearFilter} 
-              className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 mb-2 transition"
+              className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 mb-2 transition"
             >
-              <ArrowLeft size={16} /> Back to all
+              <ArrowLeft size={16} /> Back to all results
             </button>
-            <h2 className="text-xl font-bold text-blue-900 dark:text-blue-100">
-              {activeFilter} ({metrics.total})
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+              Filtered: {activeFilter}
             </h2>
           </div>
         ) : (
-          <div className="mb-6">
-            <h2 className="text-xl font-bold text-blue-900 dark:text-blue-100 flex items-center gap-2">
-              <Activity size={24} />
-              Area Analytics
+          <div>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+              <Database size={20} className="text-blue-700 dark:text-blue-400" />
+              Analysis Results
             </h2>
-            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-              {customPolygon ? 'Custom area selected' : `${(searchRadius/1000).toFixed(1)} km radius`}
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {customPolygon ? 'Custom polygon area' : `Radius: ${(searchRadius/1000).toFixed(1)} km`}
             </p>
           </div>
         )}
 
-        {/* Key Metrics Grid */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          <MetricCard 
-            label="Total Found" 
-            value={metrics.total} 
-            icon="📍"
-            color="blue"
-          />
-          <MetricCard 
-            label="Study Area" 
-            value={`${metrics.area} km²`}
-            icon="🗺️"
-            color="blue"
-          />
-          <MetricCard 
-            label="Density" 
-            value={`${metrics.density} /km²`}
-            icon="🏙️"
-            color="green"
-            tooltip="Amenities per square kilometer"
-          />
-          <MetricCard 
-            label="Diversity" 
-            value={metrics.diversityIndex}
-            icon="🌈"
-            color="purple"
-            tooltip="Shannon diversity index"
-          />
-        </div>
-
-        {/* Spatial Pattern */}
-        <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700 p-4 mb-6 rounded-md">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-bold text-blue-900 dark:text-blue-200">
-              Spatial Pattern
-            </h3>
-            <span className="text-2xl">{metrics.patternIcon}</span>
+        {/* TOTAL RESULTS - LARGE AND PROMINENT */}
+        <div className="bg-gradient-to-br from-blue-50 to-gray-50 dark:from-gray-800 dark:to-gray-850 border-2 border-blue-200 dark:border-gray-600 p-6 rounded-lg text-center">
+          <div className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
+            Total Results
           </div>
-          <div className="flex justify-between items-baseline">
-            <span className={`text-lg font-bold ${metrics.patternColor}`}>
-              {metrics.pattern}
-            </span>
-            <span className="text-xs text-blue-600 dark:text-blue-400 font-mono">
-              NNI: {metrics.spatialPattern}
-            </span>
+          <div className="text-6xl font-bold text-blue-700 dark:text-blue-400 mb-2">
+            {metrics.total}
           </div>
-          <div className="mt-2 text-xs text-blue-700 dark:text-blue-300">
-            {metrics.pattern === 'Clustered' && '📍 Amenities form concentrated hubs'}
-            {metrics.pattern === 'Dispersed' && '🌐 Amenities are evenly spread out'}
-            {metrics.pattern === 'Random' && '🎲 No clear spatial organization'}
+          <div className="text-xs text-gray-500 dark:text-gray-400">
+            amenities found in {metrics.area} km²
           </div>
         </div>
 
-        {/* Walkability Score */}
-        <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 border border-green-300 dark:border-green-700 p-4 mb-6 rounded-md">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200">
-              🚶 Walkability Score
-            </h3>
-            <span className="text-3xl font-bold text-green-600 dark:text-green-400">
-              {metrics.walkabilityScore}
-            </span>
-          </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-            <div 
-              className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-500"
-              style={{ width: `${metrics.walkabilityScore}%` }}
-            />
-          </div>
-          <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
-            {metrics.walkabilityScore > 75 && '⭐ Excellent pedestrian infrastructure'}
-            {metrics.walkabilityScore > 50 && metrics.walkabilityScore <= 75 && '👍 Good walkability'}
-            {metrics.walkabilityScore > 25 && metrics.walkabilityScore <= 50 && '🚗 Car-dependent area'}
-            {metrics.walkabilityScore <= 25 && '🚙 Low pedestrian accessibility'}
-          </div>
-        </div>
-
-        {/* PRIMARY CATEGORIES - PIE CHART 1 */}
+        {/* PRIMARY CATEGORIES - COLORFUL PIE CHART */}
         {!activeFilter && metrics.topAmenities.length > 0 && (
-          <div className="mb-6">
-            <div className="bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 border-2 border-blue-400 dark:border-blue-600 p-4 rounded-lg">
-              <h3 className="text-sm font-bold text-blue-900 dark:text-blue-200 mb-2 flex items-center gap-2">
-                <Layers size={16} />
-                Primary Categories
-                <span className="text-xs font-normal text-blue-600 dark:text-blue-400 ml-auto">
-                  (Click to Filter)
-                </span>
-              </h3>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={metrics.topAmenities}
-                      cx="50%" 
-                      cy="50%"
-                      innerRadius={40}
-                      outerRadius={70}
-                      fill="#8884d8"
-                      paddingAngle={5}
-                      dataKey="value"
-                      onClick={(data) => onCategoryClick(data.key)} 
-                      className="cursor-pointer outline-none"
-                    >
-                      {metrics.topAmenities.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={COLORS[index % COLORS.length]} 
-                          className="hover:opacity-80 transition-opacity" 
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      contentStyle={{
-                        backgroundColor: '#f8fafc',
-                        border: '1px solid #cbd5e1',
-                        borderRadius: '6px',
-                        color: '#1e293b'
-                      }}
-                    />
-                    <Legend 
-                      verticalAlign="bottom" 
-                      height={36} 
-                      iconSize={10}
-                      wrapperStyle={{
-                        color: '#1e40af',
-                        fontSize: '11px'
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
+          <div className="border border-gray-300 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50">
+            <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-3 pb-2 border-b border-gray-300 dark:border-gray-600">
+              Primary Categories
+              <span className="text-xs font-normal text-gray-500 dark:text-gray-400 ml-2">
+                (Click to filter)
+              </span>
+            </h3>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={metrics.topAmenities}
+                    cx="50%" 
+                    cy="50%"
+                    innerRadius={45}
+                    outerRadius={75}
+                    paddingAngle={3}
+                    dataKey="value"
+                    onClick={(data) => onCategoryClick(data.key)} 
+                    className="cursor-pointer outline-none"
+                  >
+                    {metrics.topAmenities.map((entry, index) => (
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={PRIMARY_COLORS[index % PRIMARY_COLORS.length]} 
+                        className="hover:opacity-70 transition-opacity stroke-white dark:stroke-gray-900" 
+                        strokeWidth={2}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      color: '#1f2937',
+                      fontSize: '12px'
+                    }}
+                  />
+                  <Legend 
+                    verticalAlign="bottom" 
+                    height={40} 
+                    iconSize={10}
+                    wrapperStyle={{
+                      fontSize: '11px',
+                      color: '#4b5563'
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
           </div>
         )}
 
-        {/* SUBCATEGORIES - COLLAPSIBLE SECTION */}
+        {/* SUBCATEGORIES - EXPANDABLE TABLE */}
         {!activeFilter && metrics.topSubcategories.length > 0 && (
-          <div className="mb-6">
+          <div className="border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50">
             <button
               onClick={() => setShowSubcategories(!showSubcategories)}
-              className="w-full bg-gradient-to-r from-orange-100 to-pink-100 dark:from-orange-900/40 dark:to-pink-900/40 border-2 border-orange-400 dark:border-orange-600 p-4 rounded-lg hover:shadow-md transition-all"
+              className="w-full p-4 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700/50 transition rounded-t-lg"
             >
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-orange-900 dark:text-orange-200 flex items-center gap-2">
-                  <TrendingUp size={16} />
+              <div className="text-left">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">
                   Subcategories ({metrics.topSubcategories.length})
                 </h3>
-                {showSubcategories ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  Detailed breakdown by type
+                </p>
               </div>
-              <p className="text-xs text-orange-700 dark:text-orange-300 text-left mt-1">
-                Cuisine types, religions, school types
-              </p>
+              {showSubcategories ? 
+                <ChevronUp size={18} className="text-gray-600 dark:text-gray-400" /> : 
+                <ChevronDown size={18} className="text-gray-600 dark:text-gray-400" />
+              }
             </button>
 
             {showSubcategories && (
-              <div className="mt-3 bg-white dark:bg-blue-900/20 border border-orange-300 dark:border-orange-700 rounded-lg p-4">
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {metrics.topSubcategories.map((sub, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        // Filter by this subcategory
-                        if (sub.type === 'cuisine') {
-                          onCategoryClick(sub.name);
-                        } else {
-                          onCategoryClick(sub.name);
-                        }
-                      }}
-                      className="w-full flex items-center justify-between p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 hover:bg-orange-100 dark:hover:bg-orange-800/30 transition-colors rounded-md group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">{sub.icon}</span>
-                        <div className="text-left">
-                          <div className="text-sm font-bold text-gray-800 dark:text-gray-200 capitalize">
-                            {sub.name}
-                          </div>
-                          <div className="text-xs text-gray-600 dark:text-gray-400 capitalize">
+              <div className="border-t border-gray-300 dark:border-gray-600">
+                {/* Add hint text */}
+                <div className="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 border-b border-gray-300 dark:border-gray-600">
+                  <p className="text-xs text-blue-700 dark:text-blue-400 italic">
+                    💡 Click any row to filter map results
+                  </p>
+                </div>
+                
+                <div className="max-h-80 overflow-y-auto">
+                  <table className="w-full text-xs">
+                    <thead className="bg-gray-200 dark:bg-gray-700 sticky top-0">
+                      <tr className="border-b border-gray-300 dark:border-gray-600">
+                        <th className="text-left p-2 font-semibold text-gray-700 dark:text-gray-300">Type</th>
+                        <th className="text-left p-2 font-semibold text-gray-700 dark:text-gray-300">Category</th>
+                        <th className="text-right p-2 font-semibold text-gray-700 dark:text-gray-300">Count</th>
+                        <th className="text-right p-2 font-semibold text-gray-700 dark:text-gray-300">%</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {metrics.topSubcategories.map((sub, idx) => (
+                        <tr
+                          key={idx}
+                          onClick={() => onCategoryClick(sub.name)}
+                          className="border-b border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-gray-700 cursor-pointer transition"
+                        >
+                          <td className="p-2 text-gray-600 dark:text-gray-400">
                             {sub.type}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg font-bold text-orange-600 dark:text-orange-400">
-                          {sub.value}
-                        </span>
-                        <div className="w-12 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-orange-500 transition-all duration-300 group-hover:bg-orange-600"
-                            style={{ width: `${(sub.value / metrics.total) * 100}%` }}
-                          />
-                        </div>
-                      </div>
-                    </button>
-                  ))}
+                          </td>
+                          <td className="p-2 text-gray-900 dark:text-gray-100 font-medium capitalize">
+                            {sub.name}
+                          </td>
+                          <td className="p-2 text-right text-gray-900 dark:text-gray-100 font-mono">
+                            {sub.value}
+                          </td>
+                          <td className="p-2 text-right text-gray-600 dark:text-gray-400 font-mono">
+                            {((sub.value / metrics.total) * 100).toFixed(1)}%
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             )}
           </div>
         )}
 
-        {/* Business Mix */}
-        <div className="mb-6">
-          <h3 className="text-sm font-bold text-blue-900 dark:text-blue-200 mb-3">
-            Business Mix
+        {/* DETAILED METRICS GRID */}
+        <div className="border border-gray-300 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50">
+          <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-3 pb-2 border-b border-gray-300 dark:border-gray-600">
+            Statistical Metrics
           </h3>
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs">
-              <span className="text-gray-600 dark:text-gray-400">🏢 Chain Businesses</span>
-              <span className="font-bold text-blue-900 dark:text-blue-200">{metrics.chainPct}%</span>
-            </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-              <div 
-                className="bg-blue-600 h-2 rounded-full"
-                style={{ width: `${metrics.chainPct}%` }}
-              />
+          <div className="space-y-3">
+            
+            {/* Density */}
+            <div className="flex justify-between items-baseline">
+              <span className="text-xs text-gray-600 dark:text-gray-400">Density (points/km²)</span>
+              <span className="text-sm font-mono font-bold text-gray-900 dark:text-gray-100">{metrics.density}</span>
             </div>
             
-            <div className="flex justify-between text-xs mt-3">
-              <span className="text-gray-600 dark:text-gray-400">🏪 Independent</span>
-              <span className="font-bold text-blue-900 dark:text-blue-200">{metrics.independentPct}%</span>
+            {/* Diversity Index */}
+            <div className="flex justify-between items-baseline">
+              <span className="text-xs text-gray-600 dark:text-gray-400">Shannon Diversity Index</span>
+              <span className="text-sm font-mono font-bold text-gray-900 dark:text-gray-100">{metrics.diversityIndex}</span>
             </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-              <div 
-                className="bg-green-600 h-2 rounded-full"
-                style={{ width: `${metrics.independentPct}%` }}
-              />
+            
+            {/* Spatial Pattern */}
+            <div className="flex justify-between items-baseline">
+              <span className="text-xs text-gray-600 dark:text-gray-400">Spatial Pattern (NNI)</span>
+              <div className="text-right">
+                <span className="text-sm font-bold text-gray-900 dark:text-gray-100">{metrics.pattern}</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 ml-2 font-mono">({metrics.spatialPattern})</span>
+              </div>
             </div>
+            
+            {/* Walkability */}
+            <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex justify-between items-baseline mb-1">
+                <span className="text-xs text-gray-600 dark:text-gray-400">Walkability Score</span>
+                <span className="text-sm font-bold text-gray-900 dark:text-gray-100">{metrics.walkabilityScore}/100</span>
+              </div>
+              <div className="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-2">
+                <div 
+                  className="bg-blue-600 dark:bg-blue-500 h-2 rounded-full transition-all duration-500"
+                  style={{ width: `${metrics.walkabilityScore}%` }}
+                />
+              </div>
+            </div>
+            
           </div>
         </div>
 
-        {/* Accessibility */}
-        {metrics.accessibilityPct > 0 && (
-          <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-300 dark:border-purple-700 p-4 mb-6 rounded-md">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-bold text-purple-900 dark:text-purple-200">
-                  ♿ Accessibility
-                </h3>
-                <p className="text-xs text-purple-700 dark:text-purple-300 mt-1">
-                  Wheelchair accessible locations
-                </p>
+        {/* BUSINESS CHARACTERISTICS */}
+        <div className="border border-gray-300 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50">
+          <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-3 pb-2 border-b border-gray-300 dark:border-gray-600">
+            Business Characteristics
+          </h3>
+          <div className="space-y-3">
+            
+            {/* Chain vs Independent */}
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-gray-600 dark:text-gray-400">Chain Businesses</span>
+                <span className="font-mono text-gray-900 dark:text-gray-100">{metrics.chainPct}%</span>
               </div>
-              <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                {metrics.accessibilityPct}%
-              </span>
+              <div className="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-1.5">
+                <div 
+                  className="bg-gray-600 dark:bg-gray-500 h-1.5 rounded-full"
+                  style={{ width: `${metrics.chainPct}%` }}
+                />
+              </div>
             </div>
+            
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-gray-600 dark:text-gray-400">Independent</span>
+                <span className="font-mono text-gray-900 dark:text-gray-100">{metrics.independentPct}%</span>
+              </div>
+              <div className="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-1.5">
+                <div 
+                  className="bg-blue-600 dark:bg-blue-500 h-1.5 rounded-full"
+                  style={{ width: `${metrics.independentPct}%` }}
+                />
+              </div>
+            </div>
+            
+            {/* Accessibility */}
+            {metrics.accessibilityPct > 0 && (
+              <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-gray-600 dark:text-gray-400">Wheelchair Accessible</span>
+                  <span className="font-mono text-gray-900 dark:text-gray-100">{metrics.accessibilityPct}%</span>
+                </div>
+                <div className="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-1.5">
+                  <div 
+                    className="bg-gray-700 dark:bg-gray-400 h-1.5 rounded-full"
+                    style={{ width: `${metrics.accessibilityPct}%` }}
+                  />
+                </div>
+              </div>
+            )}
+            
+            {/* Cuisine Count */}
+            {metrics.cuisineCount > 0 && (
+              <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex justify-between items-baseline">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Cuisine Varieties</span>
+                  <span className="text-sm font-bold text-gray-900 dark:text-gray-100">{metrics.cuisineCount}</span>
+                </div>
+              </div>
+            )}
+            
           </div>
-        )}
+        </div>
 
-        {/* Top Locations Bar Chart */}
-        <div className="mt-12 h-64">
-          <h3 className="text-sm font-bold text-blue-800 dark:text-blue-200 mb-4">Top Locations</h3>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={metrics.topLocations} layout="vertical" margin={{ left: 0 }}>
-              <XAxis type="number" hide />
-              <YAxis 
-                dataKey="name" 
-                type="category" 
-                width={80} 
-                tick={{ fontSize: 10, fill: '#1e40af' }} 
-              />
-              <Tooltip 
-                cursor={{ fill: 'transparent' }} 
-                contentStyle={{ 
-                  backgroundColor: '#1e3a8a', 
-                  border: '1px solid #3b82f6',
-                  borderRadius: '6px',
-                  color: '#e0e7ff'
-                }} 
-              />
-              <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={20}>
-                {metrics.topLocations.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill="#1e3a8a" />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+        {/* TOP LOCATIONS */}
+        <div className="border border-gray-300 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50">
+          <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-3 pb-2 border-b border-gray-300 dark:border-gray-600">
+            Most Frequent Locations
+          </h3>
+          <div className="h-48">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={metrics.topLocations} layout="vertical" margin={{ left: 0, right: 10 }}>
+                <XAxis type="number" hide />
+                <YAxis 
+                  dataKey="name" 
+                  type="category" 
+                  width={85} 
+                  tick={{ fontSize: 10, fill: '#6b7280' }} 
+                />
+                <Tooltip 
+                  cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }} 
+                  contentStyle={{ 
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '4px',
+                    fontSize: '11px'
+                  }} 
+                />
+                <Bar dataKey="count" radius={[0, 3, 3, 0]} barSize={16}>
+                  {metrics.topLocations.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill="#1e3a8a" />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
       </div>
@@ -476,25 +477,7 @@ const AnalyticsPanel = ({
   );
 };
 
-// Helper component for metric cards
-const MetricCard = ({ label, value, icon, color = "blue", tooltip }) => (
-  <div className={`bg-${color}-50 dark:bg-${color}-900/30 border border-${color}-300 dark:border-${color}-700 p-3 rounded-md`}>
-    <div className="flex items-center justify-between mb-1">
-      <span className="text-xs text-gray-600 dark:text-gray-400 font-bold">{label}</span>
-      <span className="text-lg">{icon}</span>
-    </div>
-    <div className={`text-xl font-bold text-${color}-900 dark:text-${color}-200`}>
-      {value}
-    </div>
-    {tooltip && (
-      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-        {tooltip}
-      </div>
-    )}
-  </div>
-);
-
-// Calculate polygon area (Shoelace formula)
+// Calculate polygon area
 const calculatePolygonArea = (coords) => {
   if (!coords || coords.length < 3) return 0;
   
