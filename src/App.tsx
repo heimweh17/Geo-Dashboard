@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar';
 import MapComponent from './components/MapComponent';
 import AnalyticsPanel from './components/AnalyticsPanel';
 import { searchCity, fetchAmenities, fetchRoute } from './api/osmService';
+import { Menu, X } from 'lucide-react'; // Import icons
 
 function App() {
   const [city, setCity] = useState('Orlando, FL');
@@ -20,6 +21,10 @@ function App() {
   const [categoryFilter, setCategoryFilter] = useState(null);
   const [selectedPlace, setSelectedPlace] = useState(null);
 
+  // Mobile sidebar toggle states
+  const [showLeftSidebar, setShowLeftSidebar] = useState(false);
+  const [showRightSidebar, setShowRightSidebar] = useState(false);
+
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -33,10 +38,10 @@ function App() {
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
-      document.body.style.backgroundColor = '#0c1e3e'; // Deep blue background
+      document.body.style.backgroundColor = '#0c1e3e';
     } else {
       document.documentElement.classList.remove('dark');
-      document.body.style.backgroundColor = '#f1f5f9'; // Light blue-gray background
+      document.body.style.backgroundColor = '#f1f5f9';
     }
   }, [isDarkMode]);
 
@@ -57,38 +62,32 @@ function App() {
     }
   };
 
-  // In App.jsx, update the filteredData logic:
-
-const filteredData = categoryFilter
-  ? data.filter((item) => {
-      const tags = item.tags || {};
-      
-      // Check amenity type (primary category)
-      if (tags.amenity && tags.amenity.toLowerCase().includes(categoryFilter.toLowerCase())) {
-        return true;
-      }
-      
-      // Check cuisine (subcategory)
-      const cuisine = tags.cuisine || '';
-      if (cuisine.toLowerCase().includes(categoryFilter.toLowerCase())) {
-        return true;
-      }
-      
-      // Check religion (subcategory)
-      const religion = tags.religion || '';
-      if (religion.toLowerCase().includes(categoryFilter.toLowerCase())) {
-        return true;
-      }
-      
-      // Check school type (subcategory)
-      const schoolType = tags['school:type'] || '';
-      if (schoolType.toLowerCase().includes(categoryFilter.toLowerCase())) {
-        return true;
-      }
-      
-      return false;
-    })
-  : data;
+  const filteredData = categoryFilter
+    ? data.filter((item) => {
+        const tags = item.tags || {};
+        
+        if (tags.amenity && tags.amenity.toLowerCase().includes(categoryFilter.toLowerCase())) {
+          return true;
+        }
+        
+        const cuisine = tags.cuisine || '';
+        if (cuisine.toLowerCase().includes(categoryFilter.toLowerCase())) {
+          return true;
+        }
+        
+        const religion = tags.religion || '';
+        if (religion.toLowerCase().includes(categoryFilter.toLowerCase())) {
+          return true;
+        }
+        
+        const schoolType = tags['school:type'] || '';
+        if (schoolType.toLowerCase().includes(categoryFilter.toLowerCase())) {
+          return true;
+        }
+        
+        return false;
+      })
+    : data;
 
   const handleCitySearch = async (cityName) => {
     setLoading(true);
@@ -159,7 +158,7 @@ const filteredData = categoryFilter
   const clearFilter = () => {
     setCategoryFilter(null);
   };
-  
+
   const clearSelectedPlace = () => {
     setSelectedPlace(null);
   };
@@ -171,21 +170,52 @@ const filteredData = categoryFilter
 
   return (
     <div className="flex flex-col md:flex-row h-screen w-screen overflow-hidden bg-blue-50 dark:bg-blue-950 text-blue-900 dark:text-blue-100 font-sans">
-      <Sidebar
-        onSearch={handleCitySearch}
-        onAmenityChange={handleAmenityChange}
-        onRadiusChange={handleRadiusChange}
-        onExport={() => {}}
-        loading={loading}
-        selectedAmenities={amenities}
-        searchRadius={radius}
-        toggleTheme={() => setIsDarkMode(!isDarkMode)}
-        isDarkMode={isDarkMode}
-        toggleHeatmap={() => setShowHeatmap(!showHeatmap)}
-        showHeatmap={showHeatmap}
-        customPolygon={customPolygon}
-      />
+      
+      {/* Mobile Toggle Buttons - Only visible on mobile */}
+      <div className="md:hidden fixed top-4 left-4 right-4 z-[1000] flex justify-between gap-2">
+        <button
+          onClick={() => setShowLeftSidebar(!showLeftSidebar)}
+          className="bg-blue-600 text-white p-3 rounded-lg shadow-lg hover:bg-blue-700 transition flex items-center gap-2"
+        >
+          {showLeftSidebar ? <X size={20} /> : <Menu size={20} />}
+          <span className="text-sm font-semibold">Controls</span>
+        </button>
+        
+        <button
+          onClick={() => setShowRightSidebar(!showRightSidebar)}
+          className="bg-blue-600 text-white p-3 rounded-lg shadow-lg hover:bg-blue-700 transition flex items-center gap-2"
+        >
+          <span className="text-sm font-semibold">Analytics</span>
+          {showRightSidebar ? <X size={20} /> : <Menu size={20} />}
+        </button>
+      </div>
 
+      {/* Left Sidebar - Hidden on mobile by default, shown when toggled */}
+      <div className={`
+        fixed md:relative
+        inset-y-0 left-0
+        z-[999]
+        w-full md:w-80
+        transform transition-transform duration-300 ease-in-out
+        ${showLeftSidebar ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+      `}>
+        <Sidebar
+          onSearch={handleCitySearch}
+          onAmenityChange={handleAmenityChange}
+          onRadiusChange={handleRadiusChange}
+          onExport={() => {}}
+          loading={loading}
+          selectedAmenities={amenities}
+          searchRadius={radius}
+          toggleTheme={() => setIsDarkMode(!isDarkMode)}
+          isDarkMode={isDarkMode}
+          toggleHeatmap={() => setShowHeatmap(!showHeatmap)}
+          showHeatmap={showHeatmap}
+          customPolygon={customPolygon}
+        />
+      </div>
+
+      {/* Map Container */}
       <div className="flex-1 relative z-0">
         {loading && (
           <div className="absolute inset-0 bg-blue-900/80 z-50 flex items-center justify-center text-white text-xl font-bold backdrop-blur-sm">
@@ -211,7 +241,7 @@ const filteredData = categoryFilter
         />
 
         {!customPolygon && !routeData && (
-          <div className="absolute top-4 left-14 z-[400] bg-blue-100 dark:bg-blue-900 border border-blue-300 dark:border-blue-700 p-3 shadow text-xs rounded-md">
+          <div className="hidden md:block absolute top-4 left-14 z-[400] bg-blue-100 dark:bg-blue-900 border border-blue-300 dark:border-blue-700 p-3 shadow text-xs rounded-md">
             <div className="text-blue-900 dark:text-blue-100 font-medium">
               Use toolbar (right) to draw search area
             </div>
@@ -266,8 +296,6 @@ const filteredData = categoryFilter
                 ♿ Wheelchair: {selectedPlace.tags.wheelchair}
               </p>
             )}
-            
-
             {(selectedPlace.tags?.brand || selectedPlace.tags?.operator) && (
               <p className="text-xs text-blue-800 dark:text-blue-200 mb-1">
                 🏷 {selectedPlace.tags?.brand || selectedPlace.tags?.operator}
@@ -285,17 +313,36 @@ const filteredData = categoryFilter
         )}
       </div>
 
-      <div className="hidden md:block h-full">
+      {/* Right Sidebar (Analytics) - Hidden on mobile by default */}
+      <div className={`
+        fixed md:relative
+        inset-y-0 right-0
+        z-[999]
+        w-full md:w-80
+        transform transition-transform duration-300 ease-in-out
+        ${showRightSidebar ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}
+      `}>
         <AnalyticsPanel
           data={filteredData}
           amenityLabel={amenityLabel}
           onCategoryClick={handleCategorySelect}
           activeFilter={categoryFilter}
           onClearFilter={clearFilter}
-          searchRadius={radius}           // ADD THIS
-          customPolygon={customPolygon}   // ADD THIS
+          searchRadius={radius}
+          customPolygon={customPolygon}
         />
       </div>
+
+      {/* Overlay when sidebars are open on mobile */}
+      {(showLeftSidebar || showRightSidebar) && (
+        <div 
+          className="md:hidden fixed inset-0 bg-black/50 z-[998]"
+          onClick={() => {
+            setShowLeftSidebar(false);
+            setShowRightSidebar(false);
+          }}
+        />
+      )}
     </div>
   );
 }
