@@ -1,82 +1,151 @@
-# 🗺️ GeoAnalytica - Geospatial Data Dashboard
+# Geo Dashboard
 
-A professional-grade GeoAnalytics dashboard built with React and OpenStreetMap. This application provides real-time spatial analysis, allowing users to query urban amenities, visualize density heatmaps, analyze categorical data, and calculate optimal routes using OSRM.
+GeoAnalytica is an interactive geospatial analytics platform built with React, Leaflet, and OpenStreetMap, designed for both general users and GIS-oriented exploratory analysis. It supports multi-amenity visualization, spatial statistics, city-to-city comparison, user accounts, saved places, and automated insights.
 
-![GeoAnalytica Dashboard](https://thegeodashboard.vercel.app/) 
+## Key Features
+
+### Core Map Tools
+
+* Global city search (Nominatim)
+* Radius-based search (1–20 km)
+* Custom area drawing (Leaflet-Draw polygon)
+* Amenity layering
+  * Restaurants, banks, schools, hospitals, parking, libraries, worship places, fuel, fast food, cafés, bars, universities…
+* Heatmap mode (Leaflet-Heat)
+* Colored amenity markers for easy category comparison
+* Routing preview (origin → destination)
+
+### User Accounts (Supabase)
+
+* Email-based authentication
+* Save any place from the map
+* Manage saved places in a dedicated dashboard
+* View metadata: amenity type, coordinates, tags
+* User profile modal
+
+### Analytics Panel
+
+For the selected amenity, automatically computes:
+
+* Total count
+* Subtype breakdowns:
+  * Cuisine
+  * Religion
+  * School type
+  * Amenity subtype
+* Top 5 subcategories
+* Brand / chain counts
+* Accessibility counts
+* Spatial metrics:
+  * Density
+  * Diversity index
+  * Nearest Neighbor Index (NNI)
+
+### City Comparison Mode
+
+Compare two cities (example: Orlando vs Miami) within the same search radius.
+
+**Computed metrics include:**
+
+#### Quantitative
+
+* Total amenity count
+* Density (per km²)
+* Diversity index
+* Cuisine diversity
+* Nearest Neighbor Index (clustering vs dispersion)
+
+#### Breakdown Comparisons
+
+* Amenity categories
+* Cuisine distribution
+* Religion distribution
+* School types
+
+#### Interpretation
+
+Automatically explains whether a city:
+
+* Is more clustered or dispersed
+* Has a more mixed food culture
+* Has stronger amenity concentration
+* Shows chain dominance or independent diversity
+
+### Export Tools
+
+* Export CSV of amenity results
+* Export comparison tables
+* Export detailed GIS analysis
+* Export JSON for further research or notebooks
+
+### Automated Insight Generator
+
+Each search produces:
+
+* High-level summary
+* Patterns in distribution
+* Notable clusters
+* Data anomalies or imbalances
+* City comparison insights
+
+### Saved Places System
+
+Save any map marker into your personal Supabase database:
+
+* Name, category, tags, coordinates
+* Icon previews
+* Quick "zoom to" actions
+* Delete & manage list
+
+## Screenshots
+
+### Dashboard
+
+![Dashboard](screenshots/dashboard.png)
+
+### Heatmap
+
+![Heatmap](screenshots/heatmap.png)
+
+### City Comparison
+
+![City Comparison](screenshots/comparison.png)
+
+### Saved Places
+
+![Saved Places](screenshots/saved-places.png)
+
+## Tech Stack
+
+### Frontend
+
+* React (Vite)
+* TailwindCSS
+* Framer Motion
+* Lucide Icons
+
+### Mapping
+
+* Leaflet
+* Leaflet-Draw
+* Leaflet-Heat
+* Overpass API
+* Nominatim
+
+### Backend
+
+* Supabase Auth + Database
+* Custom GIS utility library
+
+## Project Structure
 
 
-## 🚀 Key Features
+## Live Demo
 
-### 🔍 Smart Search & Filtering
-*   **Global Geocoding**: Search any city worldwide using the Nominatim API.
-*   **Amenities Filter**: Instantly locate restaurants, schools, hospitals, and more.
-*   **Category Drill-down**: Interactive charts allow deep-diving into sub-categories (e.g., filtering "Restaurants" to show only "Italian Cuisine").
+[https://thegeodashboard.vercel.app/](https://thegeodashboard.vercel.app/)
 
-### ✏️ Custom Polygon Analysis
-*   **Draw-to-Search**: Go beyond standard radius searches. Use the Polygon tool to draw custom boundaries on the map.
-*   **Spatial Queries**: The app fetches data *strictly* within your drawn shape using complex Overpass API geometry queries.
-
-### 🚗 Routing Engine
-*   **Integration with OSRM**: Calculates real-time driving/walking routes.
-*   **Interactive Wayfinding**: Click any marker to generate a route from your current location, displaying distance and estimated drive time.
-
-### 📊 Data Visualization
-*   **Dynamic Heatmaps**: Switch between marker view and density heatmap view to identify clusters.
-*   **Live Analytics**:
-    *   **Pie Charts**: Breakdown by cuisine, religion, or facility type.
-    *   **Bar Charts**: Ranking of top chains or location names.
-
-## 🛠️ Technology Stack
-
-*   **Frontend**: React.js (Vite)
-*   **Mapping Engine**: Leaflet, React-Leaflet
-*   **Drawing Tools**: Leaflet-Draw
-*   **Styling**: Tailwind CSS
-*   **Charts**: Recharts
-*   **Data APIs**:
-    *   **Overpass API**: Raw OSM node/way data.
-    *   **Nominatim**: Geocoding (City Search).
-    *   **OSRM**: Routing and Directions.
-
-## 📦 Installation & Setup
-
-1.  **Clone the Repository**
-    ```bash
-    git clone https://github.com/heimweh17/geoanalytica.git
-    cd geoanalytica
-    ```
-
-2.  **Install Dependencies**
-    ```bash
-    npm install
-    ```
-
-3.  **Run Development Server**
-    ```bash
-    npm run dev
-    ```
-
-4.  **Build for Production**
-    ```bash
-    npm run build
-    ```
-
-## 🎮 How to Use
-
-1.  **Search**: Enter a city name (e.g., "Tokyo") in the sidebar.
-2.  **Explore**: Select an amenity (e.g., "Cafe"). The map updates instantly.
-3.  **Draw**: Click the **Polygon Icon** (top right) and draw a shape on the map. The results will filter to show only items inside that shape.
-4.  **Analyze**: Look at the right sidebar. Click a slice of the Pie Chart (e.g., "Japanese") to filter the map to only show Japanese restaurants.
-5.  **Route**: Click "Allow Location" in your browser. Click any marker on the map and select **"Get Route"** to see the path and travel time.
-
-## 👨‍💻 Author
+## Author
 
 **Alex Liu**  
-Full Stack Developer & Data Enthusiast
-
-*   **Website**: [aliu.me](https://aliu.me)
-*   **GitHub**: [heimweh17](https://github.com/heimweh17)
-*   **Email**: haozhouliu17@gmail.com
-
----
-*Data © OpenStreetMap contributors*
+Full-Stack Developer & Geo-Data Enthusiast  
+[https://aliu.me](https://aliu.me)
