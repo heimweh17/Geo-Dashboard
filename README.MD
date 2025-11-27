@@ -103,17 +103,21 @@ Save any map marker into your personal Supabase database:
 
 ![Dashboard](https://github.com/heimweh17/Geo-Dashboard/blob/main/pics/Screenshot%202025-11-26%20221638.png)
 
+![Dashboard](https://github.com/heimweh17/Geo-Dashboard/blob/main/pics/Screenshot%202025-11-26%20222156.png)
+
 ### Heatmap
 
-![Heatmap](screenshots/heatmap.png)
+![Heatmap](https://github.com/heimweh17/Geo-Dashboard/blob/main/pics/Screenshot%202025-11-26%20221833.png)
 
 ### City Comparison
 
-![City Comparison](screenshots/comparison.png)
+![City Comparison](https://github.com/heimweh17/Geo-Dashboard/blob/main/pics/Screenshot%202025-11-26%20222431.png)
+![City Comparison](https://github.com/heimweh17/Geo-Dashboard/blob/main/pics/Screenshot%202025-11-26%20222448.png)
+![City Comparison](https://github.com/heimweh17/Geo-Dashboard/blob/main/pics/Screenshot%202025-11-26%20222505.png)
 
 ### Saved Places
 
-![Saved Places](screenshots/saved-places.png)
+![Saved Places](https://github.com/heimweh17/Geo-Dashboard/blob/main/pics/Screenshot%202025-11-26%20222249.png)
 
 ## Tech Stack
 
