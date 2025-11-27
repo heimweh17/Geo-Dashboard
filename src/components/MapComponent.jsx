@@ -103,6 +103,7 @@ const MapComponent = ({
   onMarkerClick,
   routeData,
   onClearRoute,
+  savedPlaceView 
 }) => {
   const safeData = Array.isArray(data) ? data : [];
 
@@ -169,7 +170,8 @@ const MapComponent = ({
         </FeatureGroup>
 
         {/* SEARCH RADIUS */}
-        {!customPolygon && center && (
+        {/* SEARCH RADIUS - Hide when viewing saved place */}
+        {!customPolygon && center && !savedPlaceView && (
           <Circle
             center={center}
             radius={searchRadius}
@@ -181,7 +183,19 @@ const MapComponent = ({
             }}
           />
         )}
-
+        {/* SEARCH RADIUS - Hide when viewing saved place */}
+        {!customPolygon && center && !savedPlaceView && (
+          <Circle
+            center={center}
+            radius={searchRadius}
+            pathOptions={{
+              color: 'blue',
+              fillOpacity: 0.05,
+              weight: 1,
+              dashArray: '5, 5',
+            }}
+          />
+        )}
         {/* USER LOCATION */}
         {userLocation && Array.isArray(userLocation) && (
           <Marker position={userLocation} icon={UserIcon}>

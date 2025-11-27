@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
-import { Search, Map, Moon, Sun, Download, Layers, X, Github, Mail, Globe, TrendingUp, ChevronDown } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Search, Map, Moon, Sun, Download, Layers, X, Github, Mail, Globe, TrendingUp, ChevronDown, User, Star } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 import ComparisonModal from './ComparisonModal';
+import LoginModal from './LoginModal';
+import ProfileModal from './ProfileModal';
 
-// 使用图片中显示的数据层选项（26个）
 const DATA_LAYERS = [
   'restaurant', 'cafe', 'bar', 'fast_food', 'pub', 'cinema', 'hospital', 'clinic',
   'pharmacy', 'dentist', 'school', 'university', 'library', 'bank', 'atm', 'shop',
@@ -22,12 +25,16 @@ const Sidebar = ({
   isDarkMode,
   toggleHeatmap,
   showHeatmap,
-  customPolygon
+  customPolygon,
+  onShowSavedPlaces
 }) => {
+  const { user } = useAuth();
   const [cityInput, setCityInput] = useState('');
   const [showAuthorModal, setShowAuthorModal] = useState(false);
   const [showComparisonModal, setShowComparisonModal] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -38,7 +45,7 @@ const Sidebar = ({
     let next;
     if (selectedAmenities.includes(amenity)) {
       next = selectedAmenities.filter((x) => x !== amenity);
-      if (next.length === 0) next = [amenity]; // 至少保留一个
+      if (next.length === 0) next = [amenity];
     } else {
       next = [...selectedAmenities, amenity];
     }
@@ -50,13 +57,15 @@ const Sidebar = ({
   };
 
   const clearAllAmenities = () => {
-    onAmenityChange(['restaurant']); // 保留默认选项
+    onAmenityChange(['restaurant']);
   };
 
   return (
     <>
-      <div className="w-full md:w-80 bg-white dark:bg-blue-950 border-r border-blue-200 dark:border-blue-800 flex flex-col h-full overflow-y-auto transition-colors duration-300 shadow-xl z-20 relative">
+      {/* SIDEBAR CONTENT */}
+      <div className="w-full md:w-80 bg-white dark:bg-blue-950 border-r border-blue-200 dark:border-blue-800 flex flex-col h-full overflow-y-auto transition-colors duration-300 shadow-xl relative">
         <div className="p-6">
+          
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-blue-900 dark:text-blue-200 flex items-center gap-2">
@@ -69,6 +78,37 @@ const Sidebar = ({
             >
               {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
+          </div>
+
+          {/* Auth Section */}
+          <div className="mb-6 pb-4 border-b border-blue-200 dark:border-blue-700">
+            {user ? (
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={onShowSavedPlaces}
+                  className="flex items-center justify-center gap-2 p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-semibold"
+                >
+                  <Star size={18} />
+                  Saved
+                </button>
+                
+                <button
+                  onClick={() => setShowProfile(true)}
+                  className="flex items-center justify-center gap-2 p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-semibold"
+                >
+                  <User size={18} />
+                  Profile
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowLoginModal(true)}
+                className="w-full flex items-center justify-center gap-2 p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-semibold"
+              >
+                <User size={18} />
+                Sign In / Sign Up
+              </button>
+            )}
           </div>
 
           {/* Search */}
@@ -84,6 +124,7 @@ const Sidebar = ({
           </form>
 
           <div className="space-y-6">
+            
             {/* Data Layers Dropdown */}
             <div>
               <label className="block text-sm font-bold text-blue-900 dark:text-blue-200 mb-2">
@@ -106,7 +147,6 @@ const Sidebar = ({
                 
                 {showDropdown && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-blue-900 border border-blue-300 dark:border-blue-700 shadow-lg z-50 max-h-80 overflow-y-auto rounded-md">
-                    {/* Select All / Clear All */}
                     <div className="p-3 border-b border-blue-200 dark:border-blue-700 flex gap-2">
                       <button
                         onClick={selectAllAmenities}
@@ -122,7 +162,6 @@ const Sidebar = ({
                       </button>
                     </div>
                     
-                    {/* Grid of Data Layer Options */}
                     <div className="p-3 grid grid-cols-2 gap-2">
                       {DATA_LAYERS.map((amenity) => (
                         <label
@@ -145,7 +184,6 @@ const Sidebar = ({
                 )}
               </div>
               
-              {/* Selected Tags Preview */}
               <div className="mt-3 flex flex-wrap gap-1">
                 {selectedAmenities.slice(0, 6).map((amenity) => (
                   <span
@@ -242,65 +280,77 @@ const Sidebar = ({
           </p>
         </div>
       </div>
-        
-      {/* Author Modal */}
-      {showAuthorModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-blue-950 border-2 border-blue-300 dark:border-blue-700 shadow-2xl w-full max-w-sm relative p-6 rounded-md">
-            <button 
-              onClick={() => setShowAuthorModal(false)}
-              className="absolute top-4 right-4 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-200"
-            >
-              <X size={24} />
-            </button>
-            
-            <div className="text-center">
-              <div className="w-16 h-16 bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 border-2 border-blue-400 dark:border-blue-600 flex items-center justify-center mx-auto mb-4 text-2xl font-bold rounded-md">
-                AL
-              </div>
-              <h2 className="text-2xl font-bold text-blue-900 dark:text-blue-100 mb-1">Alex Liu</h2>
-              <p className="text-sm text-blue-600 dark:text-blue-400 mb-6">Full Stack Developer & GIS Analyst</p>
-              
-              <div className="space-y-4 text-left">
-                <a 
-                  href="mailto:haozhouliu17@gmail.com" 
-                  className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-800 transition rounded-md"
+
+      {/* MODALS RENDERED TO DOCUMENT.BODY USING PORTAL */}
+      {createPortal(
+        <>
+          <LoginModal
+            isOpen={showLoginModal}
+            onClose={() => setShowLoginModal(false)}
+          />
+
+          <ProfileModal
+            isOpen={showProfile}
+            onClose={() => setShowProfile(false)}
+          />
+
+          {showAuthorModal && (
+            <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+              <div className="bg-white dark:bg-blue-950 border-2 border-blue-300 dark:border-blue-700 shadow-2xl w-full max-w-sm relative p-6 rounded-md">
+                <button 
+                  onClick={() => setShowAuthorModal(false)}
+                  className="absolute top-4 right-4 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-200"
                 >
-                  <Mail className="text-blue-600" size={20} />
-                  <span className="text-blue-800 dark:text-blue-200">haozhouliu17@gmail.com</span>
-                </a>
+                  <X size={24} />
+                </button>
                 
-                <a 
-                  href="https://github.com/heimweh17" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-800 transition rounded-md"
-                >
-                  <Github className="text-blue-800 dark:text-blue-200" size={20} />
-                  <span className="text-blue-800 dark:text-blue-200">github.com/heimweh17</span>
-                </a>
-                
-                <a 
-                  href="https://aliu.me" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-800 transition rounded-md"
-                >
-                  <Globe className="text-green-600" size={20} />
-                  <span className="text-blue-800 dark:text-blue-200">aliu.me</span>
-                </a>
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 border-2 border-blue-400 dark:border-blue-600 flex items-center justify-center mx-auto mb-4 text-2xl font-bold rounded-md">
+                    AL
+                  </div>
+                  <h2 className="text-2xl font-bold text-blue-900 dark:text-blue-100 mb-1">Alex Liu</h2>
+                  <p className="text-sm text-blue-600 dark:text-blue-400 mb-6">Full Stack Developer & GIS Analyst</p>
+                  
+                  <div className="space-y-4 text-left">
+                    <a 
+                      href="mailto:haozhouliu17@gmail.com" 
+                      className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-800 transition rounded-md"
+                    >
+                      <Mail className="text-blue-600" size={20} />
+                      <span className="text-blue-800 dark:text-blue-200">haozhouliu17@gmail.com</span>
+                    </a>
+                    
+                    <a 
+                      href="https://github.com/heimweh17" 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-800 transition rounded-md"
+                    >
+                      <Github className="text-blue-800 dark:text-blue-200" size={20} />
+                      <span className="text-blue-800 dark:text-blue-200">github.com/heimweh17</span>
+                    </a>
+                    
+                    <a 
+                      href="https://aliu.me" 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-800 transition rounded-md"
+                    >
+                      <Globe className="text-green-600" size={20} />
+                      <span className="text-blue-800 dark:text-blue-200">aliu.me</span>
+                    </a>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
 
-      {/* Comparison Modal */}
-      {showComparisonModal && (
-        <ComparisonModal
-          isOpen={showComparisonModal}
-          onClose={() => setShowComparisonModal(false)}
-        />
+          <ComparisonModal
+            isOpen={showComparisonModal}
+            onClose={() => setShowComparisonModal(false)}
+          />
+        </>,
+        document.body
       )}
     </>
   );
