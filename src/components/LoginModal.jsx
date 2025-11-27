@@ -91,7 +91,7 @@ const LoginModal = ({ isOpen, onClose }) => {
           )}
 
           {/* Google Sign In */}
-          <button
+          {/* <button
             onClick={handleGoogleSignIn}
             disabled={loading}
             className="w-full flex items-center justify-center gap-3 p-3 mb-4 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50"
@@ -105,17 +105,17 @@ const LoginModal = ({ isOpen, onClose }) => {
             <span className="font-semibold text-gray-700 dark:text-gray-300">
               Continue with Google
             </span>
-          </button>
+          </button> */}
 
           {/* Divider */}
-          <div className="relative mb-4">
+          {/* <div className="relative mb-4">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
             </div>
             <div className="relative flex justify-center text-sm">
               <span className="px-2 bg-white dark:bg-gray-900 text-gray-500">Or continue with email</span>
             </div>
-          </div>
+          </div> */}
 
           {/* Email/Password Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
