@@ -137,13 +137,6 @@ Save any map marker into your personal Supabase database:
 * Supabase Auth + Database
 * Custom GIS utility library
 
-## Project Structure
-src/
-  api/               # OSM + Supabase API helpers
-  components/        # UI components (Map, Sidebar, Panels, Modals)
-  context/           # Auth context (Supabase session)
-  utils/             # GIS analytics + CSV export
-  App.tsx            # Core app logic
 
 ## Live Demo
 
