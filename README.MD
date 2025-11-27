@@ -101,7 +101,7 @@ Save any map marker into your personal Supabase database:
 
 ### Dashboard
 
-![Dashboard](screenshots/dashboard.png)
+![Dashboard](https://github.com/heimweh17/Geo-Dashboard/blob/main/pics/Screenshot%202025-11-26%20221638.png)
 
 ### Heatmap
 
