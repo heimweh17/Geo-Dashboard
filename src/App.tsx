@@ -206,7 +206,7 @@ function App() {
       }
 
       // Check limit (optional - backend can enforce this too)
-      const existingPlaces = await getSavedPlaces(user.id);
+      const existingPlaces = await listPlaces(user.id);
       if (existingPlaces && existingPlaces.length >= 50) {
         alert('You have reached the maximum of 50 saved places!');
         return;
