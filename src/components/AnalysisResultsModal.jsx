@@ -9,8 +9,6 @@ import {
   BarChart3,
   PieChart as PieIcon,
   Code2,
-  Activity,
-  Database,
 } from 'lucide-react';
 
 import {
@@ -81,15 +79,13 @@ const colorForCategory = (category) => {
 };
 
 const svgToDataUrl = (svg) => {
-  const b64 =
-    typeof window !== 'undefined' && window.btoa
-      ? window.btoa(svg)
-      : Buffer.from(svg).toString('base64');
+  const b64 = typeof window !== 'undefined' && window.btoa ? window.btoa(svg) : Buffer.from(svg).toString('base64');
   return `data:image/svg+xml;base64,${b64}`;
 };
 
 const createOsmMarkerIcon = ({ color = '#3b82f6', centroid = false }) => {
-  // OSM-style pin; anchor controlled by iconAnchor (no CSS transform hacks).
+  // Create a true Leaflet image icon using an SVG data URL (OSM-style pin).
+  // Positioning relies ONLY on iconAnchor; no CSS transforms inside the SVG or on the element.
   const fill = centroid ? '#10b981' : color;
   const svg = `
 <svg width="26" height="41" viewBox="0 0 26 41" xmlns="http://www.w3.org/2000/svg">
@@ -111,6 +107,7 @@ const createOsmMarkerIcon = ({ color = '#3b82f6', centroid = false }) => {
     popupAnchor: [0, -36],
   });
 };
+  
 
 const FitToBBox = ({ bbox }) => {
   const map = useMap();
@@ -172,18 +169,6 @@ const FlyTo = ({ target, zoom = 15 }) => {
   return null;
 };
 
-const fmt = (v, digits = 3) => {
-  const n = Number(v);
-  if (!Number.isFinite(n)) return '-';
-  return n.toFixed(digits);
-};
-
-const pct = (v, digits = 1) => {
-  const n = Number(v);
-  if (!Number.isFinite(n)) return '-';
-  return `${(n * 100).toFixed(digits)}%`;
-};
-
 /** ---------- Main ---------- */
 
 const AnalysisResultsModal = ({ isOpen, onClose, analysisResult, points, params }) => {
@@ -200,11 +185,6 @@ const AnalysisResultsModal = ({ isOpen, onClose, analysisResult, points, params 
   const grid = analysisResult?.grid_density || {};
   const bbox = summary?.bbox;
 
-  // NEW scientific outputs (optional)
-  const nnStats = analysisResult?.nn_stats || null;
-  const nnHistogram = analysisResult?.nn_histogram || null;
-  const fieldQuality = analysisResult?.field_quality || null;
-
   // categories from analysisResult (preferred)
   const categories = useMemo(() => {
     const cc = summary?.category_counts || {};
@@ -218,26 +198,18 @@ const AnalysisResultsModal = ({ isOpen, onClose, analysisResult, points, params 
     return categories.map((c) => ({ name: c.key, value: c.count }));
   }, [categories]);
 
-  const clusterRaw = useMemo(() => {
-    return Array.isArray(clustering?.clusters) ? clustering.clusters : [];
-  }, [clustering]);
-
   const clusterData = useMemo(() => {
-    return clusterRaw
+    const arr = Array.isArray(clustering?.clusters) ? clustering.clusters : [];
+    return arr
       .map((c) => ({
         name: `#${c.cluster_id}`,
         size: safeNum(c.size, 0),
         cluster_id: c.cluster_id,
         lat: safeNum(c?.centroid?.lat, 0),
         lon: safeNum(c?.centroid?.lon, 0),
-        // optional scientific metadata
-        radius_km: c?.radius_km,
-        area_km2: c?.area_km2,
-        density: c?.density,
-        category_counts: c?.category_counts || {},
       }))
       .sort((a, b) => b.size - a.size);
-  }, [clusterRaw]);
+  }, [clustering]);
 
   const activeClusterTarget = useMemo(() => {
     if (activeClusterId == null) return null;
@@ -277,98 +249,6 @@ const AnalysisResultsModal = ({ isOpen, onClose, analysisResult, points, params 
   }, [summary]);
 
   const totalPoints = safeNum(summary?.total_points, Array.isArray(points) ? points.length : 0);
-
-  /** ---------- NEW: NN Histogram chart data ---------- */
-  const nnHistData = useMemo(() => {
-    // Support either:
-    // 1) { bins: [{start,end,count}...] }
-    // 2) { edges: [...], counts: [...] }
-    if (!nnHistogram) return [];
-    if (Array.isArray(nnHistogram?.bins)) {
-      return nnHistogram.bins
-        .map((b, i) => {
-          const start = safeNum(b.start, NaN);
-          const end = safeNum(b.end, NaN);
-          const count = safeNum(b.count, 0);
-          if ([start, end].some(Number.isNaN)) return null;
-          return {
-            name: `${fmt(start, 2)}–${fmt(end, 2)}`,
-            start,
-            end,
-            count,
-            idx: i,
-          };
-        })
-        .filter(Boolean);
-    }
-    const edges = Array.isArray(nnHistogram?.edges) ? nnHistogram.edges : null;
-    const counts = Array.isArray(nnHistogram?.counts) ? nnHistogram.counts : null;
-    if (edges && counts && edges.length === counts.length + 1) {
-      const out = [];
-      for (let i = 0; i < counts.length; i++) {
-        const start = safeNum(edges[i], NaN);
-        const end = safeNum(edges[i + 1], NaN);
-        if ([start, end].some(Number.isNaN)) continue;
-        out.push({
-          name: `${fmt(start, 2)}–${fmt(end, 2)}`,
-          start,
-          end,
-          count: safeNum(counts[i], 0),
-          idx: i,
-        });
-      }
-      return out;
-    }
-    return [];
-  }, [nnHistogram]);
-
-  /** ---------- NEW: Field quality list ---------- */
-  const fieldQualityRows = useMemo(() => {
-    // Expect something like:
-    // field_quality = { fields: [{name, missing_rate, type, stats:{min,max,mean,std}}...] }
-    const fields = Array.isArray(fieldQuality?.fields) ? fieldQuality.fields : [];
-    return fields
-      .map((f) => ({
-        name: String(f.name ?? ''),
-        type: f.type ? String(f.type) : '',
-        missing_rate: f.missing_rate,
-        stats: f.stats || null,
-      }))
-      .filter((r) => r.name)
-      .sort((a, b) => safeNum(b.missing_rate, 0) - safeNum(a.missing_rate, 0));
-  }, [fieldQuality]);
-
-  /** ---------- NEW: Cluster composition stacked bars ---------- */
-  const clusterComposition = useMemo(() => {
-    // Build stacked bars: each row = cluster, keys = top categories across selected clusters
-    // Needs clusters[].category_counts
-    if (!clusterData.length) return { rows: [], keys: [] };
-
-    // accumulate overall counts per category across top clusters
-    const overall = new Map();
-    const topClusters = clusterData.slice(0, 10); // avoid overcrowding
-    for (const c of topClusters) {
-      const cc = c.category_counts || {};
-      for (const [k, v] of Object.entries(cc)) {
-        const key = String(k);
-        overall.set(key, (overall.get(key) || 0) + safeNum(v, 0));
-      }
-    }
-    const keys = Array.from(overall.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 6) // show top 6 cats
-      .map(([k]) => k);
-
-    const rows = topClusters.map((c) => {
-      const row = { cluster: `#${c.cluster_id}`, size: safeNum(c.size, 0) };
-      const cc = c.category_counts || {};
-      for (const k of keys) row[k] = safeNum(cc[k], 0);
-      row.__cluster_id = c.cluster_id;
-      return row;
-    });
-
-    return { rows, keys };
-  }, [clusterData]);
 
   if (!isOpen) return null;
 
@@ -484,7 +364,7 @@ const AnalysisResultsModal = ({ isOpen, onClose, analysisResult, points, params 
                   );
                 })}
 
-              {/* Pins */}
+              {/* Pins (Leaflet Markers with custom divIcon) */}
               {showPins &&
                 Array.isArray(points) &&
                 points.map((p, idx) => {
@@ -492,9 +372,12 @@ const AnalysisResultsModal = ({ isOpen, onClose, analysisResult, points, params 
                   const lon = safeNum(p.lon, NaN);
                   if ([lat, lon].some(Number.isNaN)) return null;
 
-                  const isMatch = !selectedCategory || String(p.category || '') === String(selectedCategory);
+                  const isMatch =
+                    !selectedCategory || String(p.category || '') === String(selectedCategory);
+                  const isActive = activePointIndex === idx;
                   const color = colorForCategory(p.category);
                   const icon = createOsmMarkerIcon({ color, centroid: false });
+
 
                   return (
                     <Marker
@@ -525,12 +408,14 @@ const AnalysisResultsModal = ({ isOpen, onClose, analysisResult, points, params 
                   );
                 })}
 
-              {/* Cluster centroids */}
+              {/* Cluster centroids as distinct pins */}
               {Array.isArray(clustering?.clusters) &&
                 clustering.clusters.map((c) => {
                   const lat = safeNum(c?.centroid?.lat, NaN);
                   const lon = safeNum(c?.centroid?.lon, NaN);
                   if ([lat, lon].some(Number.isNaN)) return null;
+
+                  const isActive = activeClusterId === c.cluster_id;
 
                   const centroidIcon = createOsmMarkerIcon({ color: '#10b981', centroid: true });
 
@@ -547,15 +432,6 @@ const AnalysisResultsModal = ({ isOpen, onClose, analysisResult, points, params 
                         <div>
                           <div className="font-bold text-sm">Cluster #{c.cluster_id}</div>
                           <div className="text-xs opacity-80">size: {c.size}</div>
-                          {c.radius_km != null && (
-                            <div className="text-xs opacity-80">radius_km: {fmt(c.radius_km, 2)}</div>
-                          )}
-                          {c.area_km2 != null && (
-                            <div className="text-xs opacity-80">area_km²: {fmt(c.area_km2, 2)}</div>
-                          )}
-                          {c.density != null && (
-                            <div className="text-xs opacity-80">density: {fmt(c.density, 3)}</div>
-                          )}
                           <div className="text-xs opacity-80 mt-1">
                             {lat.toFixed(6)}, {lon.toFixed(6)}
                           </div>
@@ -664,7 +540,7 @@ const AnalysisResultsModal = ({ isOpen, onClose, analysisResult, points, params 
                     ) : (
                       <div className="max-h-40 overflow-y-auto space-y-2">
                         {categories.slice(0, 12).map((c) => {
-                          const p = totalPoints > 0 ? (c.count / totalPoints) : 0;
+                          const pct = totalPoints > 0 ? ((c.count / totalPoints) * 100).toFixed(1) : '0.0';
                           const swatch = colorForCategory(c.key);
                           return (
                             <button
@@ -682,7 +558,7 @@ const AnalysisResultsModal = ({ isOpen, onClose, analysisResult, points, params 
                                 {c.key}
                               </span>
                               <span className="font-mono text-blue-900 dark:text-blue-100">
-                                {c.count} • {pct(p)}
+                                {c.count} • {pct}%
                               </span>
                             </button>
                           );
@@ -770,8 +646,8 @@ const AnalysisResultsModal = ({ isOpen, onClose, analysisResult, points, params 
                               onClick={(d) => setSelectedCategory(d?.name || null)}
                               className="cursor-pointer outline-none"
                             >
-                              {pieData.map((d, i) => (
-                                <Cell key={i} fill={colorForCategory(d.name)} />
+                              {pieData.map((_, i) => (
+                                <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                               ))}
                             </Pie>
                             <RTooltip />
@@ -782,7 +658,7 @@ const AnalysisResultsModal = ({ isOpen, onClose, analysisResult, points, params 
                     )}
                   </div>
 
-                  {/* Cluster Sizes */}
+                  {/* Cluster Bar */}
                   <div className="p-4 rounded-lg bg-white dark:bg-blue-900 border border-blue-200 dark:border-blue-700">
                     <div className="flex items-center justify-between mb-2">
                       <div className="text-sm font-bold text-blue-900 dark:text-blue-100">
@@ -818,141 +694,6 @@ const AnalysisResultsModal = ({ isOpen, onClose, analysisResult, points, params 
                     <div className="mt-2 text-xs text-blue-700 dark:text-blue-300 opacity-80 flex items-center gap-2">
                       <Filter size={14} />
                       Click a bar to fly-to that cluster on the map.
-                    </div>
-                  </div>
-
-                  {/* NEW: Nearest Neighbor Histogram */}
-                  <div className="p-4 rounded-lg bg-white dark:bg-blue-900 border border-blue-200 dark:border-blue-700">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="text-sm font-bold text-blue-900 dark:text-blue-100 flex items-center gap-2">
-                        <Activity size={16} />
-                        Nearest-Neighbor Distance (Histogram)
-                      </div>
-                      <span className="text-[11px] text-blue-700 dark:text-blue-300 opacity-80">
-                        km
-                      </span>
-                    </div>
-
-                    {/* NN KPIs */}
-                    <div className="grid grid-cols-3 gap-2 mb-3">
-                      <MiniKPI label="avg (km)" value={nnStats?.avg_km != null ? fmt(nnStats.avg_km, 3) : '-'} />
-                      <MiniKPI label="median (km)" value={nnStats?.median_km != null ? fmt(nnStats.median_km, 3) : '-'} />
-                      <MiniKPI label="std (km)" value={nnStats?.std_km != null ? fmt(nnStats.std_km, 3) : '-'} />
-                    </div>
-
-                    {nnHistData.length === 0 ? (
-                      <div className="text-xs text-blue-700 dark:text-blue-300">
-                        No nn_histogram returned yet. (Backend can return nn_histogram.bins or {edges, counts}.)
-                      </div>
-                    ) : (
-                      <div className="h-56">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={nnHistData}>
-                            <XAxis dataKey="name" hide />
-                            <YAxis />
-                            <RTooltip />
-                            <Bar dataKey="count" radius={[6, 6, 0, 0]} />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                    )}
-
-                    <div className="mt-2 text-xs text-blue-700 dark:text-blue-300 opacity-80">
-                      Interpretation: smaller distances → more clustered; larger distances → more dispersed.
-                    </div>
-                  </div>
-
-                  {/* NEW: Cluster composition */}
-                  <div className="p-4 rounded-lg bg-white dark:bg-blue-900 border border-blue-200 dark:border-blue-700">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="text-sm font-bold text-blue-900 dark:text-blue-100 flex items-center gap-2">
-                        <BarChart3 size={16} />
-                        Cluster Composition (Top categories)
-                      </div>
-                      <span className="text-[11px] text-blue-700 dark:text-blue-300 opacity-80">
-                        top 10 clusters
-                      </span>
-                    </div>
-
-                    {clusterComposition.rows.length === 0 || clusterComposition.keys.length === 0 ? (
-                      <div className="text-xs text-blue-700 dark:text-blue-300">
-                        No cluster category_counts found yet. (Backend should add clusters[].category_counts.)
-                      </div>
-                    ) : (
-                      <>
-                        <div className="h-64">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={clusterComposition.rows} layout="vertical">
-                              <XAxis type="number" />
-                              <YAxis type="category" dataKey="cluster" width={50} />
-                              <RTooltip />
-                              <Legend />
-                              {clusterComposition.keys.map((k) => (
-                                <Bar
-                                  key={k}
-                                  dataKey={k}
-                                  stackId="a"
-                                  fill={colorForCategory(k)}
-                                  onClick={(d) => setActiveClusterId(d?.__cluster_id ?? null)}
-                                />
-                              ))}
-                            </BarChart>
-                          </ResponsiveContainer>
-                        </div>
-                        <div className="mt-2 text-xs text-blue-700 dark:text-blue-300 opacity-80">
-                          Click bars to focus cluster on map.
-                        </div>
-                      </>
-                    )}
-                  </div>
-
-                  {/* NEW: Field Quality */}
-                  <div className="p-4 rounded-lg bg-white dark:bg-blue-900 border border-blue-200 dark:border-blue-700">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="text-sm font-bold text-blue-900 dark:text-blue-100 flex items-center gap-2">
-                        <Database size={16} />
-                        Field Quality Report
-                      </div>
-                      <span className="text-[11px] text-blue-700 dark:text-blue-300 opacity-80">
-                        missing & stats
-                      </span>
-                    </div>
-
-                    {fieldQualityRows.length === 0 ? (
-                      <div className="text-xs text-blue-700 dark:text-blue-300">
-                        No field_quality returned yet. (Backend can return field_quality.fields[].)
-                      </div>
-                    ) : (
-                      <div className="max-h-64 overflow-y-auto border border-blue-100 dark:border-blue-800 rounded-md">
-                        <div className="grid grid-cols-12 gap-2 px-3 py-2 text-[11px] font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 border-b border-blue-100 dark:border-blue-800">
-                          <div className="col-span-4">Field</div>
-                          <div className="col-span-2">Type</div>
-                          <div className="col-span-2">Missing</div>
-                          <div className="col-span-4">Stats</div>
-                        </div>
-                        {fieldQualityRows.slice(0, 50).map((r) => {
-                          const s = r.stats || null;
-                          const statsText =
-                            s && (s.mean != null || s.std != null || s.min != null || s.max != null)
-                              ? `min ${fmt(s.min, 2)} • max ${fmt(s.max, 2)} • mean ${fmt(s.mean, 2)} • std ${fmt(s.std, 2)}`
-                              : '-';
-                          return (
-                            <div
-                              key={r.name}
-                              className="grid grid-cols-12 gap-2 px-3 py-2 text-[11px] text-blue-900 dark:text-blue-100 border-b border-blue-50 dark:border-blue-900/40"
-                            >
-                              <div className="col-span-4 font-semibold break-words">{r.name}</div>
-                              <div className="col-span-2 opacity-80">{r.type || '-'}</div>
-                              <div className="col-span-2 font-mono">{r.missing_rate != null ? pct(r.missing_rate, 1) : '-'}</div>
-                              <div className="col-span-4 opacity-90 break-words">{statsText}</div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    <div className="mt-2 text-xs text-blue-700 dark:text-blue-300 opacity-80">
-                      Useful for showing dataset reliability (missingness) + numeric distribution.
                     </div>
                   </div>
                 </>
@@ -1004,13 +745,6 @@ const KPI = ({ title, value, small = false }) => (
     >
       {value}
     </div>
-  </div>
-);
-
-const MiniKPI = ({ label, value }) => (
-  <div className="p-3 rounded-md bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800">
-    <div className="text-[10px] text-blue-700 dark:text-blue-300 font-semibold">{label}</div>
-    <div className="text-sm font-bold text-blue-900 dark:text-blue-100 mt-1">{value}</div>
   </div>
 );
 
