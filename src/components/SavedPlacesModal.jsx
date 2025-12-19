@@ -131,10 +131,11 @@ const SavedPlacesModal = ({ isOpen, onClose, onPlaceClick }) => {
                         className="flex-1 text-left group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"
                       >
                         <h4 className="font-bold text-gray-900 dark:text-gray-100 truncate">
-                          {place.place_name}
+                          {place.name || 'Unnamed Place'}
                         </h4>
                         <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                          {place.amenity_type}
+                          {place.tags?.amenity || 'Unknown'}
+                          {place.tags?.cuisine && ` • ${place.tags.cuisine}`}
                         </p>
                       </button>
                       <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-medium rounded ml-2 flex-shrink-0">

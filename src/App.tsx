@@ -10,7 +10,6 @@ import { searchCity, fetchAmenities, fetchRoute } from './api/osmService';
 import { savePlace, isPlaceSaved } from './services/savedPlacesService';
 import { useAuth } from './contexts/AuthContext';
 import { Menu, X, Star } from 'lucide-react';
-import { supabase } from './lib/supabaseClient';
 function App() {
   const { user } = useAuth();
   
@@ -206,25 +205,19 @@ function App() {
         return;
       }
 
-      // Check limit
-      const { data: existingPlaces } = await supabase
-        .from('saved_places')
-        .select('id')
-        .eq('user_id', user.id);
-      
+      // Check limit (optional - backend can enforce this too)
+      const existingPlaces = await getSavedPlaces(user.id);
       if (existingPlaces && existingPlaces.length >= 50) {
         alert('You have reached the maximum of 50 saved places!');
         return;
       }
 
       await savePlace({
-        user_id: user.id,
-        place_name: place.tags?.name || 'Unnamed Place',
-        amenity_type: place.tags?.amenity || 'Unknown',
+        name: place.tags?.name || 'Unnamed Place',
         category: saveData.category,
         lat,
         lon,
-        tags: place.tags,
+        tags: place.tags || {},
         notes: saveData.notes
       });
 

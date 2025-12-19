@@ -1,72 +1,66 @@
-import { supabase } from '../lib/supabaseClient';
+import { listPlaces, createPlace, updatePlace, deletePlace as deletePlaceAPI } from '../lib/api';
+
+/**
+ * Get auth token from localStorage
+ */
+const getToken = () => {
+  return localStorage.getItem('geo_token');
+};
 
 /**
  * Save a place to user's collection
  */
 export const savePlace = async (placeData) => {
-  const { data, error } = await supabase
-    .from('saved_places')
-    .insert([placeData])
-    .select()
-    .single();
+  const token = getToken();
+  if (!token) throw new Error('Not authenticated');
   
-  if (error) throw error;
-  return data;
+  return createPlace(token, placeData);
 };
 
 /**
  * Get all saved places for current user
  */
 export const getSavedPlaces = async (userId) => {
-  const { data, error } = await supabase
-    .from('saved_places')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
+  const token = getToken();
+  if (!token) throw new Error('Not authenticated');
   
-  if (error) throw error;
-  return data;
+  const places = await listPlaces(token);
+  return places;
 };
 
 /**
  * Delete a saved place
  */
 export const deletePlace = async (placeId) => {
-  const { error } = await supabase
-    .from('saved_places')
-    .delete()
-    .eq('id', placeId);
+  const token = getToken();
+  if (!token) throw new Error('Not authenticated');
   
-  if (error) throw error;
+  await deletePlaceAPI(token, placeId);
 };
 
 /**
  * Update a saved place (notes, category)
  */
-export const updatePlace = async (placeId, updates) => {
-  const { data, error } = await supabase
-    .from('saved_places')
-    .update(updates)
-    .eq('id', placeId)
-    .select()
-    .single();
+export const updatePlaceData = async (placeId, updates) => {
+  const token = getToken();
+  if (!token) throw new Error('Not authenticated');
   
-  if (error) throw error;
-  return data;
+  return updatePlace(token, placeId, updates);
 };
 
 /**
- * Check if place is already saved
+ * Check if place is already saved (by lat/lon)
  */
 export const isPlaceSaved = async (userId, lat, lon) => {
-  const { data, error } = await supabase
-    .from('saved_places')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('lat', lat)
-    .eq('lon', lon)
-    .maybeSingle();
+  const token = getToken();
+  if (!token) return false;
   
-  if (error) throw error;
-  return !!data;
+  try {
+    const places = await listPlaces(token);
+    return places.some(p => 
+      Math.abs(p.lat - lat) < 0.0001 && Math.abs(p.lon - lon) < 0.0001
+    );
+  } catch {
+    return false;
+  }
 };

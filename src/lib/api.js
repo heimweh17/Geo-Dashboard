@@ -79,12 +79,72 @@ export async function analyzeDataset(token, datasetId, params) {
 	return res.json();
 }
 
+// Saved Places endpoints
+export async function listPlaces(token) {
+	const res = await fetch(`${API_BASE}/places`, {
+		headers: buildAuthHeaders(token),
+	});
+	if (!res.ok) {
+		const text = await res.text();
+		throw new Error(text || 'Failed to fetch places');
+	}
+	return res.json();
+}
+
+export async function createPlace(token, payload) {
+	const res = await fetch(`${API_BASE}/places`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			...buildAuthHeaders(token),
+		},
+		body: JSON.stringify(payload),
+	});
+	if (!res.ok) {
+		const text = await res.text();
+		throw new Error(text || 'Failed to create place');
+	}
+	return res.json();
+}
+
+export async function updatePlace(token, placeId, payload) {
+	const res = await fetch(`${API_BASE}/places/${placeId}`, {
+		method: 'PATCH',
+		headers: {
+			'Content-Type': 'application/json',
+			...buildAuthHeaders(token),
+		},
+		body: JSON.stringify(payload),
+	});
+	if (!res.ok) {
+		const text = await res.text();
+		throw new Error(text || 'Failed to update place');
+	}
+	return res.json();
+}
+
+export async function deletePlace(token, placeId) {
+	const res = await fetch(`${API_BASE}/places/${placeId}`, {
+		method: 'DELETE',
+		headers: buildAuthHeaders(token),
+	});
+	if (!res.ok) {
+		const text = await res.text();
+		throw new Error(text || 'Failed to delete place');
+	}
+	return;
+}
+
 export const api = {
 	login,
 	register,
 	me,
 	uploadDataset,
 	analyzeDataset,
+	listPlaces,
+	createPlace,
+	updatePlace,
+	deletePlace,
 	buildAuthHeaders,
 	API_BASE,
 };
