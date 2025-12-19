@@ -8,3 +8,9 @@
   height: 100%;
   z-index: 0;
 }
+
+/* Ensure no legacy custom classes add extra transforms that could cause marker drift */
+.pin-icon,
+.osm-pin-icon {
+  transform: none !important;
+}

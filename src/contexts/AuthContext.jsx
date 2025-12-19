@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { api } from '../lib/api';
 
 const AuthContext = createContext({});
 
@@ -12,69 +12,65 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+	const [user, setUser] = useState(null);
+	const [token, setToken] = useState(null);
+	const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check active sessions
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
+		const stored = localStorage.getItem('geo_token');
+		if (stored) {
+			setToken(stored);
+			api.me(stored)
+				.then((u) => setUser(u))
+				.catch(() => {
+					localStorage.removeItem('geo_token');
+					setUser(null);
+					setToken(null);
+				})
+				.finally(() => setLoading(false));
+		} else {
+			setLoading(false);
+		}
   }, []);
 
-  // Sign up with email/password
-  const signUp = async (email, password) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-    if (error) throw error;
-    return data;
-  };
+	// Sign up with email/password (no email verification flow)
+	const signUp = async (email, password) => {
+		return api.register(email, password);
+	};
 
-  // Sign in with email/password
-  const signIn = async (email, password) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) throw error;
-    return data;
-  };
+	// Sign in with email/password
+	const signIn = async (email, password) => {
+		const data = await api.login(email, password);
+		const t = data?.access_token;
+		if (!t) throw new Error('No token returned');
+		localStorage.setItem('geo_token', t);
+		setToken(t);
+		const u = await api.me(t);
+		setUser(u);
+		return u;
+	};
 
   // Sign in with Google
   const signInWithGoogle = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: window.location.origin,
-      },
-    });
-    if (error) throw error;
-    return data;
+		throw new Error('Google sign-in is not supported.');
   };
 
   // Sign out
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+		localStorage.removeItem('geo_token');
+		setUser(null);
+		setToken(null);
   };
 
   const value = {
-    user,
-    loading,
-    signUp,
-    signIn,
-    signInWithGoogle,
-    signOut,
+		user,
+		token,
+		isAuthed: !!token,
+		loading,
+		signUp,
+		signIn,
+		signInWithGoogle,
+		signOut,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

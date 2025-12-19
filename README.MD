@@ -1,3 +1,66 @@
+## Geo Analytics Backend (FastAPI)
+
+Run locally:
+
+```bash
+python -m venv .venv
+.\.venv\Scripts\activate           # Windows PowerShell
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+Environment variables (optional):
+- `SECRET_KEY` (default: dev-secret-change-me)
+- `DATABASE_URL` (default: sqlite:///./geo.db)
+- `UPLOAD_DIR` (default: storage/uploads)
+
+### Authentication
+- Register: `POST /auth/register` JSON: `{ "email": "user@example.com", "password": "yourPassword123" }`
+- Login: `POST /auth/login` (form-encoded: `username`, `password`) → `{ "access_token": "...", "token_type":"bearer" }`
+- Current user: `GET /auth/me` with header `Authorization: Bearer <token>`
+
+### Datasets
+- Upload: `POST /datasets/upload` (multipart file `file`). Accepts CSV or GeoJSON (FeatureCollection of Points)
+  - CSV: latitude/longitude columns matched case-insensitively among: `lat|latitude|y`, `lon|lng|long|longitude|x`
+  - Response: `{ "dataset_id", "filename", "file_type", "n_points", "bbox" }`
+- List: `GET /datasets` → `{ "items": [...] }`
+
+### Analysis
+- Trigger: `POST /analysis/{dataset_id}/analyze` JSON params:
+```json
+{
+  "grid_cell_size": 0.01,
+  "dbscan_eps": null,
+  "dbscan_eps_km": 1.0,
+  "dbscan_min_samples": 5,
+  "category_field": "category"
+}
+```
+Notes:
+- If `dbscan_eps_km` is provided, DBSCAN uses haversine distance on lat/lon (km). Otherwise uses `dbscan_eps` (degrees).
+- Returns `AnalysisRun` record with `result_json`.
+
+- Fetch results: `GET /analysis/{analysis_run_id}`
+  - `result_json` includes:
+    - `summary`: total points, bbox, mean center, category counts (if field exists)
+    - `grid_density`: grid cells with bounds and counts
+    - `clustering`: `labels` per point index, cluster sizes and centroids, noise count
+
+### Example: cURL
+```bash
+# Register
+curl -X POST http://localhost:8000/auth/register -H "Content-Type: application/json" -d "{\"email\":\"a@b.com\",\"password\":\"Password123\"}"
+
+# Login
+TOKEN=$(curl -s -X POST http://localhost:8000/auth/login -H "Content-Type: application/x-www-form-urlencoded" -d "username=a@b.com&password=Password123" | python -c "import sys, json; print(json.load(sys.stdin)['access_token'])")
+
+# Upload CSV
+curl -X POST http://localhost:8000/datasets/upload -H "Authorization: Bearer $TOKEN" -F "file=@sample.csv"
+
+# List datasets
+curl -H "Authorization: Bearer $TOKEN" http://localhost:8000/datasets
+```
+
 # Geo Dashboard
 
 GeoAnalytica is an interactive geospatial analytics platform built with React, Leaflet, and OpenStreetMap, designed for both general users and GIS-oriented exploratory analysis. It supports multi-amenity visualization, spatial statistics, city-to-city comparison, user accounts, saved places, and automated insights.
@@ -151,3 +214,31 @@ Save any map marker into your personal Supabase database:
 **Alex Liu**  
 Full-Stack Developer & Geo-Data Enthusiast  
 [https://aliu.me](https://aliu.me)
+
+## Local Frontend ↔ Backend Integration
+
+Create a `.env` file in project root:
+
+```
+VITE_API_BASE_URL=http://localhost:8000
+```
+
+Steps to test:
+- Start backend:
+  - Windows PowerShell
+    - `python -m venv .venv`
+    - `.\.venv\Scripts\activate`
+    - `pip install -r requirements.txt`
+    - `uvicorn app.main:app --reload`
+- Start frontend:
+  - `npm install`
+  - `npm run dev` → open http://localhost:5173
+- In the sidebar:
+  - Click “Sign In / Sign Up” and login with email/password (stored as JWT `geo_token` in localStorage)
+  - In the “Compare Cities” section, click “Upload Dataset” and select a CSV or GeoJSON
+  - After upload, note the dataset id and point count shown
+  - (Optional) Run Analysis with default params; results panel shows summary, bbox, mean center, category counts, clusters
+
+Notes:
+- If requests fail due to CORS, ensure backend allows `http://localhost:5173`.
+- Backend returns `result_json` as a string; frontend parses with `JSON.parse` safely.
