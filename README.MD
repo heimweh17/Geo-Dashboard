@@ -24,7 +24,7 @@ This project emphasizes **interpretability, scalability, and cost awareness**, r
 
 ---
 
-##  Key Highlights (For Recruiters)
+##  Key Highlights
 
 ###  Real Backend Engineering
 - FastAPI backend with JWT authentication  
