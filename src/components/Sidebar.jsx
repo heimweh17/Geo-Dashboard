@@ -61,7 +61,7 @@ const Sidebar = ({
     const file = e.target.files?.[0];
     if (!file) return;
     if (!isAuthed || !token) {
-      setUploadError('Please login first');
+      setUploadError('Please login first, then refresh the page.');
       return;
     }
     setUploading(true);
@@ -86,7 +86,7 @@ const Sidebar = ({
   const handleRunAnalysis = async () => {
     if (!datasetInfo?.dataset_id) return;
     if (!isAuthed || !token) {
-      setAnalysisError('Please login first');
+      setAnalysisError('Please login first, then refresh the page.');
       return;
     }
     setAnalysisLoading(true);

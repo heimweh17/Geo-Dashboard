@@ -33,7 +33,7 @@ const LoginModal = ({ isOpen, onClose }) => {
           return;
         }
         await signUp(email, password);
-        setMessage('Check your email for verification link!');
+        setMessage('Your account has been created successfully. Please sign in.');
         setEmail('');
         setPassword('');
         setConfirmPassword('');
