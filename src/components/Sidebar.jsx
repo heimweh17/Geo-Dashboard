@@ -273,17 +273,6 @@ const Sidebar = ({
             </button>
           </div>
 
-          {/* AI Insights Button - Above existing content */}
-          <div className="mb-4">
-            <button
-              onClick={() => setShowAIInsightsModal(true)}
-              className="w-full flex items-center justify-center gap-2 p-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg transition font-semibold shadow-md"
-            >
-              <Sparkles size={18} />
-              AI Insights
-            </button>
-          </div>
-
           {/* Auth Section */}
           <div className="mb-6 pb-4 border-b border-blue-200 dark:border-blue-700">
             {user ? (
@@ -577,6 +566,15 @@ const Sidebar = ({
                   )}
                 </div>
               )}
+
+              {/* AI Insights Button - After dataset/analysis section */}
+              <button
+                onClick={() => setShowAIInsightsModal(true)}
+                className="w-full flex items-center justify-center gap-2 p-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg transition font-semibold shadow-md"
+              >
+                <Sparkles size={18} />
+                AI Insights
+              </button>
             </div>
           </div>
         </div>
