@@ -7,11 +7,24 @@ from passlib.context import CryptContext
 from app.core.config import settings
 
 
-password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
+password_context = CryptContext(schemes=["argon2"], deprecated="auto")
+print("DEBUG hashing schemes:", password_context.schemes(), flush=True)
 
 def hash_password(plain_password: str) -> str:
-	return password_context.hash(plain_password)
+    if plain_password is None:
+        raise ValueError("Password is required")
+
+    if not isinstance(plain_password, str):
+        plain_password = str(plain_password)
+
+    # bcrypt hard limit: 72 bytes
+    pw_bytes = plain_password.encode("utf-8")
+    if len(pw_bytes) > 72:
+        pw_bytes = pw_bytes[:72]
+        plain_password = pw_bytes.decode("utf-8", errors="ignore")
+
+    return password_context.hash(plain_password)
+
 
 
 def verify_password(plain_password: str, password_hash: str) -> bool:

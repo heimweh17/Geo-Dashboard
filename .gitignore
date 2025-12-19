@@ -25,3 +25,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.venv/Include/site/python3.12/greenlet/greenlet.h
+/.venv
