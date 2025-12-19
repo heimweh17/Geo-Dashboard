@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, Map, Moon, Sun, Download, Layers, X, Github, Mail, Globe, TrendingUp, ChevronDown, User, Star } from 'lucide-react';
+import { Search, Map, Moon, Sun, Download, Layers, X, Github, Mail, Globe, TrendingUp, ChevronDown, User, Star, Sparkles } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../lib/api';
 import AnalysisResultsModal from './AnalysisResultsModal';
 import ComparisonModal from './ComparisonModal';
 import LoginModal from './LoginModal';
 import ProfileModal from './ProfileModal';
+import AIInsightsModal from './AIInsightsModal';
 
 const DATA_LAYERS = [
   'restaurant', 'cafe', 'bar', 'fast_food', 'pub', 'cinema', 'hospital', 'clinic',
@@ -37,6 +38,7 @@ const Sidebar = ({
   const [showDropdown, setShowDropdown] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showAIInsightsModal, setShowAIInsightsModal] = useState(false);
 
   // Upload / Analysis state
   const [uploading, setUploading] = useState(false);
@@ -268,6 +270,17 @@ const Sidebar = ({
               className="p-2 border border-blue-300 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-700 dark:text-blue-300 transition-colors rounded-md"
             >
               {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+          </div>
+
+          {/* AI Insights Button - Above existing content */}
+          <div className="mb-4">
+            <button
+              onClick={() => setShowAIInsightsModal(true)}
+              className="w-full flex items-center justify-center gap-2 p-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg transition font-semibold shadow-md"
+            >
+              <Sparkles size={18} />
+              AI Insights
             </button>
           </div>
 
@@ -662,6 +675,16 @@ const Sidebar = ({
               dbscan_eps_km: Number(dbscanEpsKm),
               dbscan_min_samples: Number(dbscanMinSamples),
               category_field: categoryField || 'category',
+            }}
+          />
+
+          <AIInsightsModal
+            isOpen={showAIInsightsModal}
+            onClose={() => setShowAIInsightsModal(false)}
+            analysisResult={analysisResult}
+            token={token}
+            onGenerate={async (result) => {
+              return await api.generateAIInsight(token, result);
             }}
           />
         </>,

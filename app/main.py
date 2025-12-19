@@ -2,9 +2,11 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import auth, datasets, analysis, places
+from app.routers import auth, datasets, analysis, places, ai
 from app.db.database import Base, engine
 from app.core.config import settings
+# Import models to ensure they're registered with Base.metadata
+from app.db import models  # noqa: F401
 
 
 def create_app() -> FastAPI:
@@ -31,13 +33,15 @@ def create_app() -> FastAPI:
 	app.include_router(datasets.router, prefix="/datasets", tags=["datasets"])
 	app.include_router(analysis.router, prefix="/analysis", tags=["analysis"])
 	app.include_router(places.router, prefix="/places", tags=["places"])
+	app.include_router(ai.router, prefix="/ai", tags=["ai"])
 
 	return app
 
 
-# Create database tables at startup (only for development/SQLite)
-# In production, use Alembic migrations instead
-if os.getenv("ENVIRONMENT") != "production" and settings.sqlalchemy_database_url.startswith("sqlite"):
+# Create database tables at startup if AUTO_CREATE_TABLES is set
+# This is useful for bootstrapping in Railway or development
+# In production with migrations, set AUTO_CREATE_TABLES=false or unset
+if os.getenv("AUTO_CREATE_TABLES", "").lower() == "true":
 	Base.metadata.create_all(bind=engine)
 
 app = create_app()

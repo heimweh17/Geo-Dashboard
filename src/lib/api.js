@@ -79,7 +79,7 @@ export async function analyzeDataset(token, datasetId, params) {
 	return res.json();
 }
 
-// Saved Places endpoints
+// Saved Places endpoints and actions
 export async function listPlaces(token) {
 	const res = await fetch(`${API_BASE}/places/`, {
 		headers: buildAuthHeaders(token),
@@ -135,6 +135,29 @@ export async function deletePlace(token, placeId) {
 	return;
 }
 
+export async function generateAIInsight(token, analysisResult, context = null) {
+	const body = {
+		analysis_result: analysisResult,
+		context: context,
+	};
+	const res = await fetch(`${API_BASE}/ai/insights`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			...buildAuthHeaders(token),
+		},
+		body: JSON.stringify(body),
+	});
+	if (!res.ok) {
+		const text = await res.text();
+		if (res.status === 429) {
+			throw new Error('Weekly limit reached: 1 insight per user per 7 days. ' + text);
+		}
+		throw new Error(text || 'Failed to generate insight');
+	}
+	return res.json();
+}
+
 export const api = {
 	login,
 	register,
@@ -145,6 +168,7 @@ export const api = {
 	createPlace,
 	updatePlace,
 	deletePlace,
+	generateAIInsight,
 	buildAuthHeaders,
 	API_BASE,
 };

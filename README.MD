@@ -13,6 +13,10 @@ Environment variables (optional):
 - `SECRET_KEY` (default: dev-secret-change-me)
 - `DATABASE_URL` (default: sqlite:///./geo.db)
 - `UPLOAD_DIR` (default: storage/uploads)
+- `GEMINI_API_KEY` (required for AI insights feature)
+- `GEMINI_MODEL` (default: gemini-1.5-flash)
+- `AI_MAX_OUTPUT_TOKENS` (default: 600)
+- `AUTO_CREATE_TABLES` (set to `true` to bootstrap tables on startup, useful for first deploy on Railway)
 
 ### Authentication
 - Register: `POST /auth/register` JSON: `{ "email": "user@example.com", "password": "yourPassword123" }`
@@ -45,6 +49,22 @@ Notes:
     - `summary`: total points, bbox, mean center, category counts (if field exists)
     - `grid_density`: grid cells with bounds and counts
     - `clustering`: `labels` per point index, cluster sizes and centroids, noise count
+
+### AI Insights
+- Generate insight: `POST /ai/insights` JSON body:
+```json
+{
+  "analysis_result": { ... },  // Analysis result object (preferred)
+  "analysis_run_id": 123,       // OR analysis run ID to fetch from DB
+  "context": {                  // Optional context
+    "city_name": "Orlando",
+    "viewport_bbox": { ... }
+  }
+}
+```
+- Returns: `{ "text": "...", "highlights": ["...", "..."], "meta": {...} }`
+- Weekly limit: 1 insight per user per rolling 7 days (HTTP 429 if exceeded)
+- Requires: `GEMINI_API_KEY` environment variable
 
 ### Example: cURL
 ```bash
