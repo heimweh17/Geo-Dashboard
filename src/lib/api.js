@@ -81,7 +81,7 @@ export async function analyzeDataset(token, datasetId, params) {
 
 // Saved Places endpoints
 export async function listPlaces(token) {
-	const res = await fetch(`${API_BASE}/places`, {
+	const res = await fetch(`${API_BASE}/places/`, {
 		headers: buildAuthHeaders(token),
 	});
 	if (!res.ok) {
@@ -92,7 +92,7 @@ export async function listPlaces(token) {
 }
 
 export async function createPlace(token, payload) {
-	const res = await fetch(`${API_BASE}/places`, {
+	const res = await fetch(`${API_BASE}/places/`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
