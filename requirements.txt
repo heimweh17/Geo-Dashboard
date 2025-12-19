@@ -13,3 +13,4 @@ email-validator
 bcrypt<4
 passlib
 psycopg2-binary==2.9.9
+argon2-cffi
