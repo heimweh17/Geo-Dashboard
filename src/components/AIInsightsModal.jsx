@@ -93,8 +93,8 @@ const AIInsightsModal = ({ isOpen, onClose, analysisResult, token, onGenerate })
                 <div className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">
                   Analysis Summary
                 </div>
-                <p className="text-sm text-blue-800 dark:text-blue-200 leading-relaxed">
-                  {insight.text}
+                <p className="text-sm text-blue-800 dark:text-blue-200 leading-relaxed whitespace-pre-wrap break-words">
+                  {insight.text || (typeof insight === 'string' ? insight : JSON.stringify(insight, null, 2))}
                 </p>
               </div>
 

@@ -14,7 +14,7 @@ Environment variables (optional):
 - `DATABASE_URL` (default: sqlite:///./geo.db)
 - `UPLOAD_DIR` (default: storage/uploads)
 - `GEMINI_API_KEY` (required for AI insights feature)
-- `GEMINI_MODEL` (default: gemini-1.5-flash)
+- `GEMINI_MODEL` (default: gemini-1.5-pro; alternatives: gemini-1.0-pro, gemini-pro, models/gemini-pro)
 - `AI_MAX_OUTPUT_TOKENS` (default: 600)
 - `AUTO_CREATE_TABLES` (set to `true` to bootstrap tables on startup, useful for first deploy on Railway)
 
