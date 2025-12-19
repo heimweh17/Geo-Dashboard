@@ -1,4 +1,4 @@
-# 🌍 GeoDashboard
+# GeoDashboard
 
 **AI-Assisted Geospatial Analytics Platform**
 
@@ -6,11 +6,11 @@ A full-stack geospatial analytics platform that combines interactive mapping, sp
 
 Built as a university project to demonstrate backend system design, geospatial data modeling, and responsible AI integration in a production-style environment.
 
-🔗 **Live Demo:** https://thegeodashboard.vercel.app/
+ **Live Demo:** https://thegeodashboard.vercel.app/
 
 ---
 
-## ✨ What This Project Does
+## What This Project Does
 
 GeoDashboard allows users to:
 
@@ -24,22 +24,22 @@ This project emphasizes **interpretability, scalability, and cost awareness**, r
 
 ---
 
-## 🧠 Key Highlights (For Recruiters)
+##  Key Highlights (For Recruiters)
 
-### ✅ Real Backend Engineering
+###  Real Backend Engineering
 - FastAPI backend with JWT authentication  
 - SQLAlchemy ORM with PostgreSQL (production)  
 - Dockerized deployment on Railway  
 - Environment-aware configuration (local vs production)
 
-### 🗺️ Applied Geospatial Analytics
+###  Applied Geospatial Analytics
 - Bounding box computation  
 - Density grids  
 - DBSCAN clustering (degree-based or haversine km)  
 - Category and subtype breakdowns  
 - City-to-city metric comparison  
 
-### 🤖 Responsible AI Integration
+###  Responsible AI Integration
 - AI insights are rate-limited (**1 per user per 7 days**)  
 - AI is used for **interpretation**, not raw computation  
 - Prompts explicitly include methodological caveats  
@@ -47,7 +47,7 @@ This project emphasizes **interpretability, scalability, and cost awareness**, r
 
 ---
 
-## 🧩 System Architecture
+##  System Architecture
 
 ### Frontend
 - React (Vite)  
@@ -64,7 +64,7 @@ This project emphasizes **interpretability, scalability, and cost awareness**, r
 
 ---
 
-## 🗂️ Project Structure (Backend)
+##  Project Structure (Backend)
 
 ```text
 gdashboardbackend/
@@ -86,25 +86,25 @@ gdashboardbackend/
 └── README.md
 ```
 
-## 📊 Core Features
+##  Core Features
 
-### 🔐 Authentication
+###  Authentication
 - Email + password registration  
 - Secure password hashing (Argon2)  
 - Token-based access control  
 
-### 📁 Dataset Management
+###  Dataset Management
 - Upload CSV or GeoJSON point datasets  
 - Automatic detection of latitude / longitude fields  
 - Metadata storage (point count, bounding box)  
 
-### 📈 Spatial Analysis
+###  Spatial Analysis
 - Density grid computation  
 - DBSCAN clustering (supports km-based distance)  
 - Category and subtype aggregation  
 - Persisted analysis runs  
 
-### 🧠 AI Insights (Optional, Rate-Limited)
+###  AI Insights (Optional, Rate-Limited)
 - High-level interpretation of spatial results  
 - Identifies:
   - Distribution patterns  
@@ -114,7 +114,7 @@ gdashboardbackend/
 
 ---
 
-## 🤖 AI Insight Workflow
+##  AI Insight Workflow
 
 1. User requests AI insight from the UI  
 2. Backend checks weekly usage limit  
@@ -128,7 +128,7 @@ This design demonstrates **production-minded AI usage**, not unlimited inference
 
 ---
 
-## ⚙️ Environment Variables (Backend)
+##  Environment Variables (Backend)
 
 ```env
 DATABASE_URL=postgresql://...
@@ -138,7 +138,7 @@ AI_MODEL_NAME=models/gemini-1.5-flash
 ENVIRONMENT=production
 ```
 
-## ▶️ Local Development (Backend)
+##  Local Development (Backend)
 
 ```bash
 python -m venv .venv
@@ -147,7 +147,7 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-## 🎓 Educational Focus
+##  Educational Focus
 
 This project was built to:
 
@@ -160,7 +160,7 @@ Design choices favor **clarity, maintainability, and realism** over novelty.
 
 ---
 
-## 👤 Author
+##  Author
 
 **Alex Liu**  
 Computer Science @ University of Florida  
@@ -171,7 +171,7 @@ Full-Stack & Geospatial Data Enthusiast
 
 ---
 
-## 📌 Possible Extensions
+##  Possible Extensions
 
 - Structured AI output (JSON → charts)  
 - Cached AI insights  
