@@ -62,6 +62,22 @@ This project emphasizes **interpretability, scalability, and cost awareness**, r
 - JWT authentication  
 - AI service integration (Google Gemini)  
 
+This project is designed with a **service-oriented architecture** in mind, separating
+core geospatial analytics from AI-powered insight generation.
+
+- **Core Backend Service**
+  - Handles authentication, datasets, spatial analysis, and persistence
+  - Built with FastAPI + SQLAlchemy + PostgreSQL
+- **AI Insight Service**
+  - Dedicated service for LLM-powered analytical summaries
+  - Isolated to control cost, latency, and rate limits
+  - Communicates via HTTP API
+
+This separation improves:
+- Scalability (AI workloads can scale independently)
+- Reliability (core features remain available even if AI services are unavailable)
+- Cost control (AI usage can be strictly rate-limited per user)
+
 ---
 
 ##  Project Structure (Backend)
@@ -104,13 +120,37 @@ gdashboardbackend/
 - Category and subtype aggregation  
 - Persisted analysis runs  
 
-###  AI Insights (Optional, Rate-Limited)
-- High-level interpretation of spatial results  
-- Identifies:
-  - Distribution patterns  
-  - Category dominance  
-  - Spatial bias and data limitations  
-- Limit: **1 insight per user per 7 days**
+### AI Insights (Microservice)
+
+The AI Insights feature is implemented as an independent service powered by
+Google Gemini.
+
+Key characteristics:
+
+- Accepts structured spatial analysis results (JSON)
+- Produces high-level analytical summaries and highlights
+- Enforces **per-user weekly usage limits** to prevent abuse
+- Designed to be stateless and horizontally scalable
+
+This service focuses on **interpretation rather than computation**,
+acting as an analytical layer on top of deterministic spatial algorithms.
+
+### CI / CD
+
+The project uses a lightweight **Continuous Integration (CI)** pipeline powered by
+GitHub Actions.
+
+On every push and pull request, the pipeline automatically:
+
+- Installs dependencies
+- Verifies successful application import and startup configuration
+
+This ensures:
+- Early detection of broken imports or configuration errors
+- Consistent deployability across environments
+
+
+
 
 ---
 
