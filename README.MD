@@ -61,7 +61,7 @@ This mirrors real-world data platforms where AI augments—not replaces—core a
 - JWT-based authentication
 - Dockerized services with environment-aware configuration
 
-Link: [https://github.com/heimweh17/gdashboardbackend]
+Link: [https://github.com/heimweh17/gdashboardbackend](https://github.com/heimweh17/gdashboardbackend)
 
 ## Service-Oriented & Distributed Design
 
