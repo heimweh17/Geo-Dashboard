@@ -60,6 +60,7 @@ This mirrors real-world data platforms where AI augments—not replaces—core a
 - PostgreSQL (hosted on Railway)
 - JWT-based authentication
 - Dockerized services with environment-aware configuration
+
 Link: [https://github.com/heimweh17/gdashboardbackend]
 
 ## Service-Oriented & Distributed Design
