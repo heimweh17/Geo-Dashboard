@@ -1,3 +1,4 @@
+import app
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -7,6 +8,8 @@ from app.db.database import get_db
 from app.routers.auth import get_current_user
 from app.db.models import User
 from app.routers.ai import router as ai_router
+from app.core.request_id import RequestIdMiddleware
+
 
 # ------------------------
 # AI Microservice App
@@ -18,7 +21,8 @@ def create_ai_app() -> FastAPI:
         description="Dedicated microservice for AI-powered geospatial insights",
         version="0.1.0",
     )
-
+    
+    app.add_middleware(RequestIdMiddleware)
     # CORS (same frontend as main backend)
     app.add_middleware(
         CORSMiddleware,
@@ -34,7 +38,7 @@ def create_ai_app() -> FastAPI:
         prefix="/ai",
         tags=["AI Insights"],
     )
-
+    
     @app.get("/health")
     def health_check():
         return {

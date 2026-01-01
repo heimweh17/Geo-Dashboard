@@ -1,6 +1,9 @@
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.core.request_id import RequestIdMiddleware
+
+
 
 from app.routers import auth, datasets, analysis, places
 from app.db.database import Base, engine
@@ -18,7 +21,7 @@ def create_app() -> FastAPI:
 		version="0.1.0",
 		description="Backend API for a geospatial analytics platform."
 	)
-
+	app.add_middleware(RequestIdMiddleware)
 	# CORS: use configured origins (production-ready)
 	app.add_middleware(
 		CORSMiddleware,
