@@ -131,8 +131,6 @@ ENVIRONMENT=production
 
 ## Map / Geodata Services
 
-CARTO's Voyager raster basemap requires an API key. Request a free, domain-restricted key at [CARTO Basemaps](https://carto.com/basemaps/apikey/) and set `VITE_CARTO_API_KEY` in `.env.local`. Do not commit this value. The app appends the key only to the CARTO tile URL.
-
 The frontend currently uses public OpenStreetMap ecosystem endpoints directly:
 
 - `Nominatim` for city/place search
