@@ -14,10 +14,6 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
 import L from 'leaflet';
 import 'leaflet.heat';
-import {
-  MAP_TILE_ATTRIBUTION,
-  MAP_TILE_URL,
-} from '../config/mapProviders';
 
 // ====== ICONS ======
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -150,8 +146,8 @@ const MapComponent = ({
         style={{ height: '100%', width: '100%' }}
       >
         <TileLayer
-          attribution={MAP_TILE_ATTRIBUTION}
-          url={MAP_TILE_URL}
+          attribution="&copy; OSM"
+          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
         />
 
         <MapUpdater center={center} />
