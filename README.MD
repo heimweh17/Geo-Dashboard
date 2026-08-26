@@ -129,6 +129,30 @@ AI_MODEL_NAME=models/gemini-1.5-flash
 ENVIRONMENT=production
 ```
 
+## Map / Geodata Services
+
+The frontend currently uses public OpenStreetMap ecosystem endpoints directly:
+
+- `Nominatim` for city/place search
+- `Overpass API` for amenity / POI queries
+- `OSRM` for routing
+- `Carto` raster tiles for the basemap
+
+These are configured in `env.example` and can be swapped without code changes:
+
+```env
+VITE_NOMINATIM_BASE_URL=https://nominatim.openstreetmap.org/search
+VITE_OVERPASS_API_URL=https://overpass-api.de/api/interpreter
+VITE_OSRM_BASE_URL=https://router.project-osrm.org/route/v1
+VITE_MAP_TILE_URL=https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png
+VITE_MAP_TILE_ATTRIBUTION=&copy; OSM
+```
+
+Important:
+
+- Public OpenStreetMap services are not production-grade API-key products by default.
+- If higher reliability or larger traffic is needed, replace them with a hosted provider or self-hosted service.
+
 ##  Local Development (Backend)
 
 ```bash

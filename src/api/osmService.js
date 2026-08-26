@@ -1,8 +1,9 @@
 import axios from 'axios';
-
-const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org/search';
-const OVERPASS_API_URL = 'https://overpass-api.de/api/interpreter';
-const OSRM_BASE_URL = 'https://router.project-osrm.org/route/v1';
+import {
+  NOMINATIM_BASE_URL,
+  OVERPASS_API_URL,
+  OSRM_BASE_URL,
+} from '../config/mapProviders';
 
 export const searchCity = async (cityName) => {
   const response = await axios.get(NOMINATIM_BASE_URL, {
