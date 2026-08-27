@@ -1,0 +1,8 @@
+# The Python API is deployed from the separate gdashboardbackend repository on Render.
+app/
+alembic/
+alembic.ini
+geo.db
+migrate.sh
+requirements.txt
+storage/
