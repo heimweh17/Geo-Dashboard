@@ -21,6 +21,7 @@ import {
 } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { MAP_TILE_ATTRIBUTION, MAP_TILE_URL } from '../config/mapTiles';
 
 import {
   ResponsiveContainer,
@@ -332,8 +333,8 @@ const AnalysisResultsModal = ({ isOpen, onClose, analysisResult, points, params 
               preferCanvas
             >
               <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution="&copy; OpenStreetMap contributors"
+                url={MAP_TILE_URL}
+                attribution={MAP_TILE_ATTRIBUTION}
               />
 
               {bbox && <FitToBBox bbox={bbox} />}

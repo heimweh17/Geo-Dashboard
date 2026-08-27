@@ -21,6 +21,7 @@ import {
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
 import { generateComparativeInsights, calculateSimilarityScore } from '../utlis/generateInsights';
+import { MAP_TILE_ATTRIBUTION, MAP_TILE_URL } from '../config/mapTiles';
 
 // Leaflet icon fix
 delete L.Icon.Default.prototype._getIconUrl;
@@ -530,8 +531,8 @@ const SimpleMap = ({ center, data, radius, cityName }) => {
       scrollWheelZoom={false}
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution={MAP_TILE_ATTRIBUTION}
+        url={MAP_TILE_URL}
       />
       
       <Circle
