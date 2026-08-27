@@ -1,6 +1,8 @@
 import axios from 'axios';
 import { API_BASE } from '../lib/api';
 
+// This public Overpass instance supports browser CORS requests.
+const OVERPASS_API_URL = 'https://maps.mail.ru/osm/tools/overpass/api/interpreter';
 const OSRM_BASE_URL = 'https://router.project-osrm.org/route/v1';
 
 export const searchCity = async (cityName) => {
@@ -16,14 +18,26 @@ export const searchCity = async (cityName) => {
 export const fetchAmenities = async (lat, lon, amenities, radius, polygonCoords = null) => {
   // 支持 string 或 array
   const list = Array.isArray(amenities) ? amenities : [amenities];
+  const amenityFilter = list.join('|');
+  const area = polygonCoords
+    ? `(poly:"${polygonCoords.map((p) => `${p.lat} ${p.lng}`).join(' ')}")`
+    : `(around:${radius},${lat},${lon})`;
+  const query = `
+    [out:json][timeout:25];
+    (
+      node["amenity"~"${amenityFilter}"]${area};
+      way["amenity"~"${amenityFilter}"]${area};
+      relation["amenity"~"${amenityFilter}"]${area};
+    );
+    out center;
+  `;
+
   try {
-    const response = await axios.post(`${API_BASE}/osm/amenities`, {
-      lat,
-      lon,
-      amenities: list,
-      radius,
-      polygon: polygonCoords,
-    });
+    const response = await axios.post(
+      OVERPASS_API_URL,
+      `data=${encodeURIComponent(query)}`,
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+    );
     return response.data.elements;
   } catch (error) {
     console.error('Error fetching amenities:', error);
