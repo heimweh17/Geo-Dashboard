@@ -37,7 +37,10 @@ export const fetchAmenities = async (lat, lon, amenities, radius, polygonCoords 
       const response = await axios.post(
         OVERPASS_API_URL,
         `data=${encodeURIComponent(query)}`,
-        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+        {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          timeout: 15000,
+        }
       );
       return response.data.elements;
     } catch (error) {
