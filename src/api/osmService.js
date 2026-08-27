@@ -1,21 +1,13 @@
 import axios from 'axios';
+import { API_BASE } from '../lib/api';
 
-const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org/search';
-const OVERPASS_API_URL = 'https://overpass-api.de/api/interpreter';
 const OSRM_BASE_URL = 'https://router.project-osrm.org/route/v1';
 
 export const searchCity = async (cityName) => {
-  const response = await axios.get(NOMINATIM_BASE_URL, {
-    params: { q: cityName, format: 'json', limit: 1 },
+  const response = await axios.get(`${API_BASE}/osm/cities`, {
+    params: { query: cityName },
   });
-  if (response.data.length > 0) {
-    return {
-      lat: parseFloat(response.data[0].lat),
-      lon: parseFloat(response.data[0].lon),
-      display_name: response.data[0].display_name,
-    };
-  }
-  return null;
+  return response.data;
 };
 
 // Fetches data. 
@@ -24,41 +16,14 @@ export const searchCity = async (cityName) => {
 export const fetchAmenities = async (lat, lon, amenities, radius, polygonCoords = null) => {
   // 支持 string 或 array
   const list = Array.isArray(amenities) ? amenities : [amenities];
-  const amenityFilter = list.join('|'); // restaurant|cafe|bar...
-
-  let query = '';
-
-  if (polygonCoords) {
-    const polyString = polygonCoords.map((p) => `${p.lat} ${p.lng}`).join(' ');
-    query = `
-      [out:json][timeout:25];
-      (
-        node["amenity"~"${amenityFilter}"](poly:"${polyString}");
-        way["amenity"~"${amenityFilter}"](poly:"${polyString}");
-        relation["amenity"~"${amenityFilter}"](poly:"${polyString}");
-      );
-      out center;
-    `;
-  } else {
-    query = `
-      [out:json][timeout:25];
-      (
-        node["amenity"~"${amenityFilter}"](around:${radius},${lat},${lon});
-        way["amenity"~"${amenityFilter}"](around:${radius},${lat},${lon});
-        relation["amenity"~"${amenityFilter}"](around:${radius},${lat},${lon});
-      );
-      out center;
-    `;
-  }
-
   try {
-    const response = await axios.post(
-      OVERPASS_API_URL,
-      `data=${encodeURIComponent(query)}`,
-      {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      }
-    );
+    const response = await axios.post(`${API_BASE}/osm/amenities`, {
+      lat,
+      lon,
+      amenities: list,
+      radius,
+      polygon: polygonCoords,
+    });
     return response.data.elements;
   } catch (error) {
     console.error('Error fetching amenities:', error);

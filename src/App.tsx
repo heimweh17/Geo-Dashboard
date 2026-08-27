@@ -20,6 +20,7 @@ function App() {
   const [radius, setRadius] = useState(1500);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [dataError, setDataError] = useState('');
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
@@ -68,12 +69,14 @@ function App() {
     setRouteData(null);
     setCategoryFilter(null);
     setSelectedPlace(null);
+    setDataError('');
 
     try {
       const results = await fetchAmenities(lat, lon, amenityList, rad, poly);
       setData(results);
     } catch (error) {
       console.error(error);
+      setDataError('Map data is temporarily unavailable. Please try again in a moment.');
     } finally {
       setLoading(false);
     }
@@ -112,6 +115,7 @@ function App() {
     setData([]);
     setRouteData(null);
     setSelectedPlace(null);
+    setDataError('');
     try {
       const location = await searchCity(cityName);
       if (location) {
@@ -119,9 +123,12 @@ function App() {
         setCoordinates([location.lat, location.lon]);
         setCustomPolygon(null);
         await loadData(location.lat, location.lon, amenities, radius, null);
+      } else {
+        setDataError('City not found. Please check the spelling and try again.');
       }
     } catch (error) {
-      alert('Error searching city.');
+      console.error(error);
+      setDataError('City search is temporarily unavailable. Please try again in a moment.');
     } finally {
       setLoading(false);
     }
@@ -345,6 +352,12 @@ function App() {
               <div className="animate-spin h-8 w-8 border-4 border-white border-t-transparent rounded-full mx-auto mb-4"></div>
               Processing Data...
             </div>
+          </div>
+        )}
+
+        {dataError && !loading && (
+          <div className="absolute top-4 left-4 right-4 md:left-14 md:right-auto md:max-w-md z-[500] rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-800 shadow-lg">
+            {dataError}
           </div>
         )}
 
