@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, Map, Moon, Sun, Download, Layers, X, Github, Mail, Globe, TrendingUp, ChevronDown, User, Star, Sparkles } from 'lucide-react';
+import { Search, Map, Moon, Sun, Download, Layers, X, Github, Mail, Globe, TrendingUp, ChevronDown, User, Star, Sparkles, Info } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../lib/api';
 import AnalysisResultsModal from './AnalysisResultsModal';
@@ -569,16 +569,28 @@ const Sidebar = ({
 
               {/* AI Insights Button - After dataset/analysis section */}
               <button
-                onClick={() => setShowAIInsightsModal(true)}
-                className="w-full flex items-center justify-center gap-2 p-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg transition font-semibold shadow-md"
+                type="button"
+                disabled
+                title="AI Insights is temporarily unavailable"
+                className="w-full flex cursor-not-allowed items-center justify-center gap-2 rounded-lg border border-slate-300 bg-slate-100 p-3 font-semibold text-slate-500 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
               >
                 <Sparkles size={18} />
-                AI Insights
+                AI Insights (Paused)
               </button>
             </div>
           </div>
         </div>
         
+        <div className="mx-4 mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-left text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
+          <div className="flex items-center gap-2 font-semibold">
+            <Info size={15} aria-hidden="true" />
+            AI Insights temporarily unavailable
+          </div>
+          <p className="mt-1 leading-relaxed text-amber-800 dark:text-amber-200">
+            The optional AI service is paused to keep this public demo sustainable. Core mapping and analytics remain available.
+          </p>
+        </div>
+
         {/* Footer */}
         <div className="mt-auto p-6 text-xs text-blue-600 dark:text-blue-400 text-center border-t border-blue-200 dark:border-blue-800">
           <p className="mb-1">Data © OpenStreetMap contributors</p>
