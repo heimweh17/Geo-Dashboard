@@ -6,9 +6,9 @@
 
 GeoAnalytica is a portfolio project that combines an interactive map experience with an authenticated analytics workspace. A visitor can search a city, retrieve live OpenStreetMap amenity data, inspect statistical summaries, compare two cities on consistent study areas, and save places. Authenticated users can also upload point datasets for server-side spatial analysis.
 
-## Why this project
+## Engineering focus
 
-This project was built to demonstrate the engineering decisions behind an end-to-end data product, not just a map UI:
+The implementation focuses on the following production-oriented concerns:
 
 - React state management and responsive mapping interactions.
 - A FastAPI API with JWT authentication, protected resources, and request correlation.
@@ -31,9 +31,9 @@ The city comparison workflow queries the same amenity set across two study areas
 
 ![City comparison insights](pics/Screenshot%202025-11-26%20222431.png)
 
-### Interpret analysis results
+### Optional AI interpretation service
 
-After an authenticated user uploads a CSV or GeoJSON point dataset and runs the deterministic analysis pipeline, the UI can pass the structured result to a configured AI insight service for a human-readable narrative. The AI layer is an interpretation step, not the source of the underlying metrics.
+After an authenticated user uploads a CSV or GeoJSON point dataset and runs the deterministic analysis pipeline, the UI can pass the structured result to a dedicated AI service for a human-readable narrative. The AI layer is an interpretation step, not the source of the underlying metrics.
 
 ![AI-assisted analysis narrative](pics/Screenshot%202025-12-19%20174500.png)
 
@@ -47,7 +47,7 @@ After an authenticated user uploads a CSV or GeoJSON point dataset and runs the 
 | City comparison | Side-by-side study areas with normalized density and diversity comparisons plus CSV and JSON exports. |
 | User workspace | Email/password registration, JWT sessions, saved-place CRUD, profile summary, and protected API routes. |
 | Dataset analytics | Authenticated CSV or GeoJSON upload, coordinate parsing, bounding box detection, grid-density calculation, DBSCAN clustering, and persisted analysis results. |
-| AI integration | JWT-forwarding proxy for a configurable upstream insight service, including correlation IDs and error handling. |
+| AI integration | A separate FastAPI/Gemini insight service with structured output and a database-backed per-user limit; the service source and proxy contract are retained. |
 
 ## Architecture
 
@@ -65,6 +65,8 @@ Browser -> Vercel-hosted React SPA -> Render FastAPI API -> Neon PostgreSQL
    |             +-- Leaflet, React, Recharts, interactive controls
    |
    +-- OSRM route service for selected amenities
+
+Render FastAPI AI proxy -> Dedicated AI FastAPI service -> Gemini API
 ```
 
 ### Deployed services
@@ -77,13 +79,19 @@ Browser -> Vercel-hosted React SPA -> Render FastAPI API -> Neon PostgreSQL
 | OpenStreetMap services | Supply basemap, geocoding, and amenity data. |
 | OSRM | Provides driving routes for selected map features. |
 
+### AI service deployment note
+
+The dedicated AI service was previously deployed on AWS and successfully used by the dashboard. Its FastAPI entry point, Gemini integration, rate-limiting logic, and the main API's `AI_SERVICE_URL` proxy contract remain in the codebase. It is intentionally not running in the current public deployment to avoid recurring cloud costs.
+
+To restore it, deploy the AI service, configure its Gemini credentials, and set the main API's `AI_SERVICE_URL`. This lets the core dashboard and deterministic analysis workflow remain deployable without coupling the public demo to a paid AI runtime.
+
 ## Data flow and engineering choices
 
 1. **City lookup** is served through the FastAPI `/osm/cities` endpoint, which calls Nominatim with an application user agent. This keeps the browser clear of geocoder CORS constraints.
 2. **Amenity discovery** uses Overpass queries for nodes, ways, and relations within either a radius or a drawn polygon. The client retries a transient failure once and uses a bounded request timeout.
 3. **Client-side city analytics** computes comparable statistics from the returned OSM feature set. This keeps immediate map interaction responsive while making the calculation logic inspectable in the frontend.
 4. **Authenticated dataset analytics** sends user-provided CSV or GeoJSON files to FastAPI. The API validates the file type, detects coordinates, calculates a bounding box and summary statistics, runs grid-density and DBSCAN calculations, and records the result in PostgreSQL.
-5. **AI insights are optional and downstream.** The API forwards a JWT-authenticated structured analysis payload to an `AI_SERVICE_URL` only when that service is configured. The analytical results remain available independently of the narrative layer.
+5. **AI insights are optional and downstream.** The main API forwards a JWT-authenticated structured analysis payload, including a request ID, to the separate AI service through `AI_SERVICE_URL`. The AI service applies a per-user rolling seven-day limit, calls Gemini, and returns structured narrative output. It is currently paused in the public deployment; the analytical results remain available independently of the narrative layer.
 
 ## Reliability and security highlights
 
@@ -110,6 +118,7 @@ Browser -> Vercel-hosted React SPA -> Render FastAPI API -> Neon PostgreSQL
 - PostgreSQL, Neon, psycopg2
 - NumPy and scikit-learn for spatial analysis
 - python-jose and Argon2 password hashing
+- Google Generative AI SDK for the optional AI microservice
 
 **Platform and data integrations**
 
@@ -165,6 +174,8 @@ npm run lint
 | `SECRET_KEY` | Backend | Secret for JWT signing. |
 | `CORS_ORIGINS` | Backend | Comma-separated allowed frontend origins. |
 | `AI_SERVICE_URL` | Backend, optional | Upstream endpoint for AI narrative generation. |
+| `GEMINI_API_KEY` | AI microservice | Credential used by the Gemini integration. |
+| `GEMINI_MODEL` | AI microservice, optional | Preferred Gemini model name. |
 
 ## Public data and attribution
 
@@ -172,7 +183,7 @@ The map and amenity workflow depends on public, third-party services. Data cover
 
 ## Repository notes
 
-This repository contains the deployed React client and portfolio assets. The production FastAPI service is maintained in the separate [gdashboardbackend repository](https://github.com/heimweh17/gdashboardbackend). The live deployment is intentionally configured as two independently deployable services connected through a documented API contract.
+The Vercel deployment is built from the React client in `src/`. The production FastAPI service is maintained in the separate [gdashboardbackend repository](https://github.com/heimweh17/gdashboardbackend). The service boundaries are explicit: the browser calls the core API, and the core API can call the optional AI service through a small authenticated contract.
 
 ## Author
 
