@@ -6,12 +6,34 @@ const buildAuthHeaders = (token) => ({
 	Authorization: `Bearer ${token}`,
 });
 
+const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+async function fetchWithServiceRetry(url, options) {
+	const retryableStatuses = new Set([502, 503, 504]);
+	const retryDelays = [1500, 4000];
+
+	for (let attempt = 0; attempt <= retryDelays.length; attempt += 1) {
+		try {
+			const response = await fetch(url, options);
+			if (!retryableStatuses.has(response.status) || attempt === retryDelays.length) {
+				return response;
+			}
+		} catch (error) {
+			if (attempt === retryDelays.length) {
+				throw error;
+			}
+		}
+
+		await sleep(retryDelays[attempt]);
+	}
+}
+
 export async function login(email, password) {
 	const body = new URLSearchParams();
 	body.set('username', email);
 	body.set('password', password);
 
-	const res = await fetch(`${API_BASE}/auth/login`, {
+	const res = await fetchWithServiceRetry(`${API_BASE}/auth/login`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/x-www-form-urlencoded',
@@ -26,7 +48,7 @@ export async function login(email, password) {
 }
 
 export async function register(email, password) {
-	const res = await fetch(`${API_BASE}/auth/register`, {
+	const res = await fetchWithServiceRetry(`${API_BASE}/auth/register`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -41,7 +63,7 @@ export async function register(email, password) {
 }
 
 export async function me(token) {
-	const res = await fetch(`${API_BASE}/auth/me`, {
+	const res = await fetchWithServiceRetry(`${API_BASE}/auth/me`, {
 		headers: buildAuthHeaders(token),
 	});
 	if (!res.ok) {
