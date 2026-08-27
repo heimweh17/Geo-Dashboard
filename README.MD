@@ -1,183 +1,183 @@
-# GeoDashboard
+# GeoAnalytica
 
-**AI-Assisted Geospatial Analytics Platform**
+**A full-stack geospatial analytics dashboard for exploring city amenities, comparing urban patterns, and turning spatial data into explainable insights.**
 
-GeoDashboard is a full-stack geospatial analytics platform that integrates interactive spatial visualization, deterministic geospatial analysis, and cost-aware AI-generated insights.
+[Live demo](https://thegeodashboard.vercel.app) | [Backend API docs](https://gdashboardbackend.onrender.com/docs) | [Backend repository](https://github.com/heimweh17/gdashboardbackend)
 
-The project is designed as a university capstone–style system with a strong emphasis on **backend system design, service-oriented architecture, distributed deployment, CI/CD workflows, and responsible AI integration** in a production-like environment.
+GeoAnalytica is a portfolio project that combines an interactive map experience with an authenticated analytics workspace. A visitor can search a city, retrieve live OpenStreetMap amenity data, inspect statistical summaries, compare two cities on consistent study areas, and save places. Authenticated users can also upload point datasets for server-side spatial analysis.
 
-🔗 **Live Demo**: https://thegeodashboard.vercel.app/
+## Why this project
 
----
+This project was built to demonstrate the engineering decisions behind an end-to-end data product, not just a map UI:
 
-## Overview
+- React state management and responsive mapping interactions.
+- A FastAPI API with JWT authentication, protected resources, and request correlation.
+- PostgreSQL persistence for user accounts, saved places, datasets, and analysis runs.
+- Deterministic spatial metrics and clustering before any optional AI interpretation.
+- Resilient integration with public geospatial services that can be slow or intermittently unavailable.
+- Production deployment across Vercel, Render, and Neon.
 
-GeoDashboard enables users to explore spatial point data, perform quantitative geospatial analysis, and receive AI-assisted interpretations of spatial patterns.
+## Product tour
 
-Rather than treating AI as a black-box solution, the system follows a layered analytical approach:
+### Explore live city amenities
 
-- Deterministic geospatial computation first  
-- AI used strictly as an interpretive and explanatory layer  
-- Explicit constraints on cost, rate limits, and reliability  
+Search a city, choose one or more amenity categories, and adjust the search radius or draw a custom polygon. The dashboard maps returned features, exposes raw OSM tags, supports category filtering, and summarizes the current result set.
 
-This mirrors real-world data platforms where AI augments — rather than replaces — core analytical pipelines.
+![Interactive city amenity exploration](pics/Screenshot%202025-12-19%20175301.png)
 
----
+### Compare urban patterns
 
-## Key Capabilities
+The city comparison workflow queries the same amenity set across two study areas, then reports feature counts, density, diversity, nearest-neighbor distribution, cuisine variety, and chain versus independent business signals. Results can be exported for follow-up analysis.
 
-### Interactive Geospatial Exploration
-- Map-based visualization of spatial point data
-- Category-based layering and color encoding
-- Heatmaps and spatial density overlays
-- City-to-city comparative views
+![City comparison insights](pics/Screenshot%202025-11-26%20222431.png)
 
-### Dataset-Driven Analytics
-- Upload CSV or GeoJSON point datasets
-- Automatic latitude / longitude field detection
-- Bounding box and dataset metadata computation
-- Persisted analysis runs to ensure reproducibility
+### Interpret analysis results
 
-### Spatial Analysis Engine
-- Grid-based density computation
-- DBSCAN clustering (degree-based or haversine distance in kilometers)
-- Category and subtype aggregation
-- Quantitative metrics for city-level comparison
+After an authenticated user uploads a CSV or GeoJSON point dataset and runs the deterministic analysis pipeline, the UI can pass the structured result to a configured AI insight service for a human-readable narrative. The AI layer is an interpretation step, not the source of the underlying metrics.
 
-### AI-Assisted Insights
-- AI-generated analytical summaries based on structured spatial results
-- Strict per-user weekly rate limits
-- Usage tracked and enforced at the database level
-- AI focused on interpretation and pattern explanation, not raw computation
+![AI-assisted analysis narrative](pics/Screenshot%202025-12-19%20174500.png)
 
----
+## Features
 
-## System Architecture
+| Area | Current capabilities |
+| --- | --- |
+| Map exploration | City search, 26 amenity filters, adjustable radius, custom polygon search, marker popups, and category filtering. |
+| Map visualization | Leaflet basemap, typed marker icons, heatmap mode, geolocation, and driving routes to selected places. |
+| On-map analytics | Counts, category and subtype breakdowns, density, Shannon diversity, nearest-neighbor pattern classification, walkability proxy, accessibility tags, cuisine variety, and chain signals. |
+| City comparison | Side-by-side study areas with normalized density and diversity comparisons plus CSV and JSON exports. |
+| User workspace | Email/password registration, JWT sessions, saved-place CRUD, profile summary, and protected API routes. |
+| Dataset analytics | Authenticated CSV or GeoJSON upload, coordinate parsing, bounding box detection, grid-density calculation, DBSCAN clustering, and persisted analysis results. |
+| AI integration | JWT-forwarding proxy for a configurable upstream insight service, including correlation IDs and error handling. |
 
-### Frontend
-- React (Vite) for fast iteration and modular UI design
-- Leaflet for interactive map rendering
-- TailwindCSS + Framer Motion for responsive layouts and transitions
-- Deployed on Vercel
+## Architecture
 
-### Backend
-- FastAPI for high-performance API services
-- SQLAlchemy ORM for data modeling and persistence
-- PostgreSQL (hosted on Railway)
-- JWT-based authentication and access control
-- Dockerized services with environment-aware configuration
-
-Backend Repository:  
-https://github.com/heimweh17/gdashboardbackend
-
----
-
-## Service-Oriented & Distributed Design
-
-GeoDashboard is implemented using a **service-oriented, microservices-inspired architecture**, separating core geospatial functionality from AI-powered insight generation.
-
-### Core Backend Service
-- Handles authentication, dataset ingestion, spatial analysis, and persistence
-- Implements deterministic geospatial algorithms
-- Built with FastAPI, SQLAlchemy, and PostgreSQL
-- Deployed on Railway as the primary application backend
-
-### AI Insight Service
-- Dedicated microservice for LLM-powered analytical summaries
-- Deployed independently on **AWS** to isolate AI workloads
-- Communicates with the core backend via HTTP APIs
-- Enforces strict rate limits to control cost and latency
-
-### Architectural Benefits
-- **Scalability**: AI workloads scale independently from core analytics
-- **Reliability**: Core features remain available even if AI services are unavailable
-- **Cost Control**: AI usage is explicitly bounded per user
-- **Production-Oriented Design**: Reflects real-world microservice and distributed system patterns
-
-### CI / CD Pipeline
-
-The project implements a lightweight but production-oriented **Continuous Integration (CI)** workflow using **GitHub Actions**.
-
-On every push and pull request to the main branch, the CI pipeline automatically:
-
-- Sets up a clean Python environment
-- Installs backend dependencies
-- Verifies application import and startup configuration
-- Fails early on broken imports, missing environment bindings, or configuration errors
-
-This CI setup ensures that:
-
-- Code pushed to production is always deployable
-- Configuration regressions are caught before deployment
-- Distributed services remain consistent across environments
-
-While deployment is currently handled by managed platforms (Railway and AWS), the CI pipeline is designed to be easily extended into a full **CI/CD workflow** (e.g., automated container builds and service redeployments).
-
-This approach reflects real-world engineering tradeoffs: prioritizing **stability, observability, and cost-awareness** over unnecessary pipeline complexity.
-
-## Backend Project Structure
-
----
-
-##  Environment Variables (Backend)
-
-```env
-DATABASE_URL=postgresql://...
-SECRET_KEY=your_secret_key
-GEMINI_API_KEY=your_api_key
-AI_MODEL_NAME=models/gemini-1.5-flash
-ENVIRONMENT=production
+```text
+                         OpenStreetMap ecosystem
+                    Nominatim / Overpass / OSM tiles
+                                  |
+                                  v
+Browser -> Vercel-hosted React SPA -> Render FastAPI API -> Neon PostgreSQL
+   |             |                       |                      |
+   |             |                       |                      +-- users, saved places,
+   |             |                       |                          datasets, analysis runs
+   |             |                       +-- JWT auth, upload parsing, DBSCAN,
+   |             |                           grid-density analysis, AI proxy
+   |             +-- Leaflet, React, Recharts, interactive controls
+   |
+   +-- OSRM route service for selected amenities
 ```
 
-##  Local Development (Backend)
+### Deployed services
 
-```bash
+| Service | Responsibility |
+| --- | --- |
+| [Vercel](https://thegeodashboard.vercel.app) | Serves the Vite/React single-page application. |
+| [Render](https://gdashboardbackend.onrender.com/docs) | Runs the public FastAPI API for authentication, saved places, data uploads, analysis, and city search. |
+| [Neon](https://neon.com) | Provides the persistent PostgreSQL database used by the deployed API. |
+| OpenStreetMap services | Supply basemap, geocoding, and amenity data. |
+| OSRM | Provides driving routes for selected map features. |
+
+## Data flow and engineering choices
+
+1. **City lookup** is served through the FastAPI `/osm/cities` endpoint, which calls Nominatim with an application user agent. This keeps the browser clear of geocoder CORS constraints.
+2. **Amenity discovery** uses Overpass queries for nodes, ways, and relations within either a radius or a drawn polygon. The client retries a transient failure once and uses a bounded request timeout.
+3. **Client-side city analytics** computes comparable statistics from the returned OSM feature set. This keeps immediate map interaction responsive while making the calculation logic inspectable in the frontend.
+4. **Authenticated dataset analytics** sends user-provided CSV or GeoJSON files to FastAPI. The API validates the file type, detects coordinates, calculates a bounding box and summary statistics, runs grid-density and DBSCAN calculations, and records the result in PostgreSQL.
+5. **AI insights are optional and downstream.** The API forwards a JWT-authenticated structured analysis payload to an `AI_SERVICE_URL` only when that service is configured. The analytical results remain available independently of the narrative layer.
+
+## Reliability and security highlights
+
+- Passwords are hashed with Argon2; protected API routes use signed JWT bearer tokens.
+- Saved places, datasets, and analysis runs are scoped to the authenticated user in both route handlers and database queries.
+- The frontend retries temporary authentication gateway failures and presents a connection state while the free API service wakes up.
+- Map tile configuration supports CARTO when an API key is present and falls back to OpenStreetMap tiles otherwise, preserving a functional map without embedding a key in the repository.
+- The FastAPI service configures explicit CORS origins for the production frontend and local development.
+- The API sends a request ID to the optional AI service so cross-service failures can be traced.
+
+## Tech stack
+
+**Frontend**
+
+- React 19, TypeScript, Vite
+- React Leaflet, Leaflet Draw, Leaflet Heat
+- Recharts, Tailwind CSS, Lucide
+- Axios and browser Fetch APIs
+
+**Backend**
+
+- Python, FastAPI, Uvicorn
+- SQLAlchemy 2, Pydantic, Alembic
+- PostgreSQL, Neon, psycopg2
+- NumPy and scikit-learn for spatial analysis
+- python-jose and Argon2 password hashing
+
+**Platform and data integrations**
+
+- Vercel, Render, Neon PostgreSQL
+- OpenStreetMap, Nominatim, Overpass, OSRM
+
+## Local development
+
+The deployed frontend and API live in separate repositories. Start the backend first, then point the frontend at it.
+
+### 1. Run the API
+
+```powershell
+git clone https://github.com/heimweh17/gdashboardbackend.git
+cd gdashboardbackend
 python -m venv .venv
-source .venv/bin/activate
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+
+$env:SECRET_KEY = "replace-with-a-local-secret"
+$env:CORS_ORIGINS = "http://localhost:5173"
+# Omit DATABASE_URL to use local SQLite, or uncomment this line for PostgreSQL.
+# $env:DATABASE_URL = "postgresql://user:password@localhost:5432/geodashboard"
+
 uvicorn app.main:app --reload
 ```
 
-## Educational Focus
+### 2. Run the frontend
 
-This project was developed to simulate a production-oriented data platform and to deepen practical understanding of modern backend and system design concepts.
+```powershell
+git clone https://github.com/heimweh17/Geo-Dashboard.git
+cd Geo-Dashboard
+npm ci
+Copy-Item env.example .env.local
+# Set VITE_API_BASE_URL=http://localhost:8000 in .env.local
+npm run dev
+```
 
-Key learning objectives include:
+Useful commands:
 
-- Designing backend systems beyond basic CRUD operations  
-- Applying geospatial analytics in a real, user-facing application  
-- Integrating AI services responsibly with explicit cost and usage constraints  
-- Deploying and debugging distributed services in a production-like environment  
-- Implementing CI workflows to ensure deployment stability  
+```powershell
+npm run build
+npm run lint
+```
 
-Design decisions emphasize **clarity, maintainability, and engineering realism** over novelty or purely experimental features.
+### Environment variables
 
+| Variable | Used by | Purpose |
+| --- | --- | --- |
+| `VITE_API_BASE_URL` | Frontend, local development | FastAPI base URL. Production uses the deployed Render API. |
+| `VITE_CARTO_API_KEY` | Frontend, optional | Enables CARTO raster tiles. Without it, the app uses OpenStreetMap tiles. |
+| `DATABASE_URL` | Backend | PostgreSQL connection string. Omit locally to use SQLite. |
+| `SECRET_KEY` | Backend | Secret for JWT signing. |
+| `CORS_ORIGINS` | Backend | Comma-separated allowed frontend origins. |
+| `AI_SERVICE_URL` | Backend, optional | Upstream endpoint for AI narrative generation. |
 
----
+## Public data and attribution
 
-## Screenshots 
-### Dashboard ![Dashboard](https://github.com/heimweh17/Geo-Dashboard/blob/main/pics/Screenshot%202025-12-19%20175301.png)![Dashboard](https://github.com/heimweh17/Geo-Dashboard/blob/main/pics/Screenshot%202025-11-26%20221638.png) ![Dashboard](https://github.com/heimweh17/Geo-Dashboard/blob/main/pics/Screenshot%202025-11-26%20222156.png) 
-### AI Insights ![AI](https://github.com/heimweh17/Geo-Dashboard/blob/main/pics/Screenshot%202025-12-19%20174500.png)
-### Local Dataset ![Local](https://github.com/heimweh17/Geo-Dashboard/blob/main/pics/Screenshot%202025-12-19%20174605.png)
-### Heatmap ![Heatmap](https://github.com/heimweh17/Geo-Dashboard/blob/main/pics/Screenshot%202025-11-26%20221833.png) 
-### City Comparison ![City Comparison](https://github.com/heimweh17/Geo-Dashboard/blob/main/pics/Screenshot%202025-11-26%20222431.png) ![City Comparison](https://github.com/heimweh17/Geo-Dashboard/blob/main/pics/Screenshot%202025-11-26%20222448.png) ![City Comparison](https://github.com/heimweh17/Geo-Dashboard/blob/main/pics/Screenshot%202025-11-26%20222505.png)
+The map and amenity workflow depends on public, third-party services. Data coverage, tagging completeness, and availability can vary by location and provider. The application keeps OpenStreetMap attribution visible on the map as required by the tile provider and OpenStreetMap terms.
 
----
+## Repository notes
 
-##  Author
+This repository contains the deployed React client and portfolio assets. The production FastAPI service is maintained in the separate [gdashboardbackend repository](https://github.com/heimweh17/gdashboardbackend). The live deployment is intentionally configured as two independently deployable services connected through a documented API contract.
 
-**Alex Liu**  
-Computer Science @ University of Florida  
-Full-Stack & Geospatial Data Enthusiast  
+## Author
 
-🌐 https://aliu.me  
-🔗 https://github.com/heimweh17  
+**Alex Liu**
 
----
+Computer Science, University of Florida
 
-##  Possible Extensions
-
-- Structured AI output (JSON → charts)  
-- Cached AI insights  
-- Multi-city batch comparison  
-- Research-oriented export formats  
+[Portfolio](https://aliu.me) | [GitHub](https://github.com/heimweh17)
