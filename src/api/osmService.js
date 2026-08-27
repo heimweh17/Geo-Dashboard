@@ -32,16 +32,23 @@ export const fetchAmenities = async (lat, lon, amenities, radius, polygonCoords 
     out center;
   `;
 
-  try {
-    const response = await axios.post(
-      OVERPASS_API_URL,
-      `data=${encodeURIComponent(query)}`,
-      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-    );
-    return response.data.elements;
-  } catch (error) {
-    console.error('Error fetching amenities:', error);
-    throw error;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const response = await axios.post(
+        OVERPASS_API_URL,
+        `data=${encodeURIComponent(query)}`,
+        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+      );
+      return response.data.elements;
+    } catch (error) {
+      if (attempt === 1) {
+        console.error('Error fetching amenities:', error);
+        throw error;
+      }
+
+      // Public Overpass instances occasionally shed a single request under load.
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+    }
   }
 };
 
